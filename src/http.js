@@ -79,12 +79,12 @@ export function handleError(response, error, fallbackMessage) {
 
 export function readJsonBody(request) {
   if (request.body && typeof request.body === "object" && !Array.isArray(request.body)) {
-    return Promise.resolve(request.body);
+    return Promise.resolve(trimObjectKeys(request.body));
   }
 
   if (typeof request.body === "string") {
     try {
-      return Promise.resolve(JSON.parse(request.body));
+      return Promise.resolve(trimObjectKeys(JSON.parse(request.body)));
     } catch {
       return Promise.reject(new DailyTenderError("JSON body is invalid.", { field: "body" }));
     }
@@ -114,7 +114,7 @@ export function readJsonBody(request) {
       }
 
       try {
-        resolve(JSON.parse(rawBody));
+        resolve(trimObjectKeys(JSON.parse(rawBody)));
       } catch {
         reject(new DailyTenderError("JSON body is invalid.", { field: "body" }));
       }
@@ -122,4 +122,18 @@ export function readJsonBody(request) {
 
     request.on("error", reject);
   });
+}
+
+function trimObjectKeys(value) {
+  if (Array.isArray(value)) {
+    return value.map(trimObjectKeys);
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [key.trim(), trimObjectKeys(nestedValue)])
+  );
 }

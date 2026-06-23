@@ -80,8 +80,9 @@ export function buildDailyPayload(input = {}) {
   const person1Name = normalizeName(input.person1Name, "person1Name");
   const person2Name = normalizeName(input.person2Name, "person2Name");
   const quoteMode = input.quoteMode || "daily";
+  const loveCountRule = input.loveCountRule || "exclusive";
 
-  const loveDays = daysBetweenInclusive(loveStartDate, date);
+  const loveDays = countLoveDays(loveStartDate, date, loveCountRule);
   const person1BirthdayInfo = nextBirthdayInfo(date, person1Birthday);
   const person2BirthdayInfo = nextBirthdayInfo(date, person2Birthday);
   const quote = input.quote
@@ -99,7 +100,7 @@ export function buildDailyPayload(input = {}) {
     love: {
       startDate: loveStartDate,
       days: loveDays,
-      countRule: "inclusive"
+      countRule: loveCountRule
     },
     loveDays,
     person1BirthdayDays: person1BirthdayInfo.days,
@@ -154,25 +155,40 @@ export function buildMessagePayload(body = {}, options = {}) {
     person1Birthday: people[0].birthday,
     person2Birthday: people[1].birthday,
     quoteMode: body.quoteMode,
+    loveCountRule: body.loveCountRule,
     quote: options.quote || body.quote,
     quoteSource: options.quoteSource || (body.quote ? "provided" : undefined)
   });
 
+  const decoratedPeople = daily.people.map((person, index) => ({
+    ...person,
+    emoji: people[index].emoji || defaultPersonEmoji(index)
+  }));
+
   const context = {
     date: daily.date,
+    displayDate: normalizeOptionalText(body.displayDate, "displayDate") || formatChineseDate(daily.date),
     week: normalizeOptionalText(body.week, "week"),
     city: resolveCity(body),
     location: normalizeOptionalText(body.location || body.locationText || body.address, "location"),
     weather: normalizeOptionalText(body.weather, "weather"),
     temperature: normalizeOptionalText(body.temperature, "temperature"),
     feelsLike: normalizeOptionalText(body.feelsLike, "feelsLike"),
-    rainProbability: normalizeOptionalText(body.rainProbability, "rainProbability")
+    rainProbability: formatRainProbability(normalizeOptionalText(body.rainProbability, "rainProbability"))
+  };
+  const messageOptions = {
+    greetingText: normalizeOptionalText(body.greetingText, "greetingText") || "早安吖",
+    greetingName: normalizeOptionalText(body.greetingName, "greetingName") || decoratedPeople[0].name,
+    closingText: normalizeOptionalText(body.closingText, "closingText") || "今天也要记得好好吃饭哦！",
+    emojis: normalizeEmojis(body.emojis)
   };
 
   return {
     ...daily,
+    people: decoratedPeople,
     context,
-    message: renderMessage(daily, context)
+    messageOptions,
+    message: renderMessage({ ...daily, people: decoratedPeople }, context, messageOptions)
   };
 }
 
@@ -190,11 +206,13 @@ function resolvePeopleInput(body) {
     return [
       {
         name: body.person1Name,
-        birthday: body.person1Birthday
+        birthday: body.person1Birthday,
+        emoji: body.person1Emoji
       },
       {
         name: body.person2Name,
-        birthday: body.person2Birthday
+        birthday: body.person2Birthday,
+        emoji: body.person2Emoji
       }
     ];
   }
@@ -270,40 +288,30 @@ export function selectQuote(date, quoteMode, quotes) {
   return normalizeQuote(quotes[index], "quote");
 }
 
-function renderMessage(daily, context) {
-  const lines = [];
-  const dateLine = [context.date, context.week].filter(Boolean).join(" ");
-  if (dateLine) {
-    lines.push(dateLine);
-  }
-
-  const weatherParts = [];
-  if (context.city) weatherParts.push(context.city);
-  if (context.weather) weatherParts.push(context.weather);
-  if (context.temperature) weatherParts.push(`气温 ${context.temperature}`);
-  if (context.feelsLike) weatherParts.push(`体感 ${context.feelsLike}`);
-  if (context.rainProbability) weatherParts.push(`降雨概率 ${context.rainProbability}`);
-  if (weatherParts.length > 0) {
-    lines.push(weatherParts.join("，"));
-  }
-
-  if (lines.length > 0) {
-    lines.push("");
-  }
-
-  lines.push(`我们已经在一起 ${daily.loveDays} 天啦。`);
+function renderMessage(daily, context, options) {
+  const emojis = options.emojis;
+  const lines = [
+    `${emojis.greeting}${options.greetingText}${options.greetingName}`,
+    `${emojis.date}${context.displayDate}${context.week ? ` ${context.week}` : ""}`,
+    `${emojis.city}城市：${context.city || ""}`,
+    `${emojis.weather}天气：${context.weather || ""}`,
+    `${emojis.feelsLike}体感温度：${context.feelsLike || ""}`,
+    `${emojis.rain}降雨概率：${context.rainProbability || ""}`,
+    `${emojis.love}今天是我们恋爱的第${daily.loveDays}天`
+  ];
 
   for (const person of daily.people) {
     if (person.birthdayDays === 0) {
-      lines.push(`今天是${person.name}的生日，生日快乐！`);
+      lines.push(`${person.emoji}今天是${person.name}生日，祝${person.name}生日快乐！`);
     } else {
-      lines.push(`距离${person.name}的生日还有 ${person.birthdayDays} 天。`);
+      lines.push(`${person.emoji}距离${person.name}生日还有${person.birthdayDays}天`);
     }
   }
 
+  lines.push(`${emojis.closing}${options.closingText}`);
   lines.push("");
-  lines.push(daily.quote.zh);
   lines.push(daily.quote.en);
+  lines.push(daily.quote.zh);
 
   return lines.join("\n");
 }
@@ -347,8 +355,41 @@ function normalizePerson(person, fieldPrefix) {
 
   return {
     name: normalizeName(person.name, `${fieldPrefix}.name`),
-    birthday: normalizeMonthDay(person.birthday, `${fieldPrefix}.birthday`)
+    birthday: normalizeMonthDay(person.birthday, `${fieldPrefix}.birthday`),
+    emoji: normalizeOptionalText(person.emoji, `${fieldPrefix}.emoji`)
   };
+}
+
+function normalizeEmojis(value) {
+  const defaults = {
+    greeting: "🌞",
+    date: "📆",
+    city: "🏡",
+    weather: "🌤️",
+    feelsLike: "🫠",
+    rain: "☔️",
+    love: "💖",
+    closing: "🥰"
+  };
+
+  if (value === undefined || value === null) {
+    return defaults;
+  }
+
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new DailyTenderError("emojis must be an object.", { field: "emojis" });
+  }
+
+  return Object.fromEntries(
+    Object.entries(defaults).map(([key, fallback]) => [
+      key,
+      normalizeOptionalText(value[key], `emojis.${key}`) || fallback
+    ])
+  );
+}
+
+function defaultPersonEmoji(index) {
+  return index === 0 ? "🦌" : "🌙";
 }
 
 function normalizeOptionalText(value, fieldName) {
@@ -406,15 +447,25 @@ function normalizeMonthDay(value, fieldName) {
   return value;
 }
 
-function daysBetweenInclusive(startDate, endDate) {
-  const days = daysBetween(startDate, endDate) + 1;
-  if (days < 1) {
+function countLoveDays(startDate, endDate, countRule) {
+  const difference = daysBetween(startDate, endDate);
+  if (difference < 0) {
     throw new DailyTenderError("loveStartDate cannot be later than date.", {
       field: "loveStartDate"
     });
   }
 
-  return days;
+  if (countRule === "exclusive") {
+    return difference;
+  }
+
+  if (countRule === "inclusive") {
+    return difference + 1;
+  }
+
+  throw new DailyTenderError("loveCountRule must be exclusive or inclusive.", {
+    field: "loveCountRule"
+  });
 }
 
 function nextBirthdayInfo(currentDate, monthDay) {
@@ -461,6 +512,19 @@ function isValidMonthDay(year, month, day) {
 
 function formatDate(year, month, day) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function formatChineseDate(dateString) {
+  const [year, month, day] = dateString.split("-");
+  return `${year}年${month}月${day}日`;
+}
+
+function formatRainProbability(value) {
+  if (!value) {
+    return undefined;
+  }
+
+  return value.includes("%") || value.includes("％") ? value : `${value}%`;
 }
 
 function firstValue(searchParams, key) {

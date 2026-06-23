@@ -2,6 +2,21 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.1.3] - 2026-06-23
+
+### Changed
+
+- Changed `POST /api/message` output to a send-ready morning message template with emoji labels.
+- Changed default love-day counting to the date-difference rule used by AutoCare and the iOS Shortcut message example.
+- Changed quote order in the final message to English first, Chinese second.
+
+### Added
+
+- Added `greetingName`, `greetingText`, `closingText`, and `emojis` inputs for message customization.
+- Added per-person `emoji` support for birthday countdown lines.
+- Added automatic `%` suffix formatting for numeric `rainProbability`.
+- Added request JSON key trimming to tolerate accidental trailing spaces in iOS Shortcut dictionary keys.
+
 ## [0.1.2] - 2026-06-23
 
 ### Added

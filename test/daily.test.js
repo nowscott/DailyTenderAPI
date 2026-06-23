@@ -19,8 +19,8 @@ test("builds the shortcut-friendly daily payload with transmitted names", () => 
   });
 
   assert.equal(payload.date, "2026-06-23");
-  assert.equal(payload.loveDays, 4);
-  assert.equal(payload.love.countRule, "inclusive");
+  assert.equal(payload.loveDays, 3);
+  assert.equal(payload.love.countRule, "exclusive");
   assert.equal(payload.names.person1, "Person A");
   assert.equal(payload.names.person2, "Person B");
   assert.equal(payload.person1BirthdayDays, 0);
@@ -119,16 +119,66 @@ test("builds a full message from shortcut JSON input", () => {
     }
   );
 
-  assert.equal(payload.loveDays, 4);
+  assert.equal(payload.loveDays, 3);
   assert.equal(payload.person1BirthdayDays, 0);
   assert.equal(payload.person2BirthdayDays, 364);
   assert.equal(payload.quoteSource, "test");
-  assert.match(payload.message, /2026-06-23 星期二/);
-  assert.match(payload.message, /杭州，多云，体感 32°C，降雨概率 40%/);
-  assert.match(payload.message, /我们已经在一起 4 天啦。/);
-  assert.match(payload.message, /今天是Person A的生日，生日快乐！/);
-  assert.match(payload.message, /距离Person B的生日还有 364 天。/);
+  assert.match(payload.message, /📆2026年06月23日 星期二/);
+  assert.match(payload.message, /🏡城市：杭州/);
+  assert.match(payload.message, /🌤️天气：多云/);
+  assert.match(payload.message, /🫠体感温度：32°C/);
+  assert.match(payload.message, /☔️降雨概率：40%/);
+  assert.match(payload.message, /💖今天是我们恋爱的第3天/);
+  assert.match(payload.message, /🦌今天是Person A生日，祝Person A生日快乐！/);
+  assert.match(payload.message, /🌙距离Person B生日还有364天/);
   assert.match(payload.message, /稳定的爱让普通日子也发光。/);
+});
+
+test("renders the final send-ready morning message template", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      week: "星期二",
+      location: "中国\n浙江省\n杭州市 西湖区\n文三路",
+      weather: "晴间多云",
+      feelsLike: "33°C",
+      rainProbability: "40",
+      loveStart: "2022-05-20",
+      greetingName: "小鹿",
+      greetingText: "早安吖",
+      closingText: "今天也要记得好好吃饭哦！",
+      people: [
+        { name: "小鹿", birthday: "08-16", emoji: "🦌" },
+        { name: "星河", birthday: "11-03", emoji: "🌙" }
+      ]
+    },
+    {
+      quote: {
+        en: "You needn't be born radiant, but you can keep shining.",
+        zh: "你不必天生闪耀，但可以持续发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(
+    payload.message,
+    [
+      "🌞早安吖小鹿",
+      "📆2026年06月23日 星期二",
+      "🏡城市：杭州市",
+      "🌤️天气：晴间多云",
+      "🫠体感温度：33°C",
+      "☔️降雨概率：40%",
+      "💖今天是我们恋爱的第1684天",
+      "🦌距离小鹿生日还有349天",
+      "🌙距离星河生日还有291天",
+      "🥰今天也要记得好好吃饭哦！",
+      "",
+      "You needn't be born radiant, but you can keep shining.",
+      "你不必天生闪耀，但可以持续发光。"
+    ].join("\n")
+  );
 });
 
 test("requires exactly two people for the full message endpoint", () => {
@@ -175,7 +225,7 @@ test("uses location text as city fallback for the full message", () => {
 
   assert.equal(payload.context.city, "杭州市");
   assert.equal(payload.context.location, "中国\n浙江省\n杭州市 西湖区\n文三路");
-  assert.match(payload.message, /杭州市，多云，体感 32°C，降雨概率 40%/);
+  assert.match(payload.message, /🏡城市：杭州市/);
 });
 
 test("accepts shortcut-friendly flat person fields for the full message", () => {
@@ -187,8 +237,10 @@ test("accepts shortcut-friendly flat person fields for the full message", () => 
       loveStart: "2026-06-20",
       person1Name: "小鹿",
       person1Birthday: "08-16",
+      person1Emoji: "🦌",
       person2Name: "星河",
-      person2Birthday: "11-03"
+      person2Birthday: "11-03",
+      person2Emoji: "🌙"
     },
     {
       quote: {
@@ -200,6 +252,7 @@ test("accepts shortcut-friendly flat person fields for the full message", () => 
   );
 
   assert.deepEqual(payload.people.map((person) => person.name), ["小鹿", "星河"]);
+  assert.deepEqual(payload.people.map((person) => person.emoji), ["🦌", "🌙"]);
   assert.equal(payload.context.city, "杭州市");
 });
 

@@ -4,7 +4,7 @@
 
 Production: `https://dtn.0211120.xyz`
 
-Current version: `0.1.1`
+Current version: `0.1.3`
 
 ## 命名
 
@@ -51,9 +51,11 @@ curl -X POST "http://localhost:3000/api/message" \
     "feelsLike": "32°C",
     "rainProbability": "40%",
     "loveStart": "2022-05-20",
+    "greetingName": "小鹿",
+    "closingText": "今天也要记得好好吃饭哦！",
     "people": [
-      { "name": "Person A", "birthday": "08-16" },
-      { "name": "Person B", "birthday": "11-03" }
+      { "name": "小鹿", "birthday": "08-16", "emoji": "🦌" },
+      { "name": "星河", "birthday": "11-03", "emoji": "🌙" }
     ]
   }'
 ```
@@ -63,23 +65,25 @@ curl -X POST "http://localhost:3000/api/message" \
 ```json
 {
   "date": "2026-06-23",
-  "loveDays": 1685,
+  "loveDays": 1684,
   "person1BirthdayDays": 349,
   "person2BirthdayDays": 291,
   "people": [
     {
       "key": "person1",
-      "name": "Person A",
+      "name": "小鹿",
       "birthday": "08-16",
       "birthdayDays": 349,
-      "nextBirthday": "2027-08-16"
+      "nextBirthday": "2027-08-16",
+      "emoji": "🦌"
     },
     {
       "key": "person2",
-      "name": "Person B",
+      "name": "星河",
       "birthday": "11-03",
       "birthdayDays": 291,
-      "nextBirthday": "2027-11-03"
+      "nextBirthday": "2027-11-03",
+      "emoji": "🌙"
     }
   ],
   "quote": {
@@ -87,7 +91,7 @@ curl -X POST "http://localhost:3000/api/message" \
     "zh": "你不必天生闪耀，但可以持续发光。"
   },
   "quoteSource": "iciba",
-  "message": "2026-06-23 星期二\n杭州，多云，体感 32°C，降雨概率 40%\n\n我们已经在一起 1685 天啦。\n距离Person A的生日还有 349 天。\n距离Person B的生日还有 291 天。\n\n你不必天生闪耀，但可以持续发光。\nYou needn't be born radiant, but you can keep shining."
+  "message": "🌞早安吖小鹿\n📆2026年06月23日 星期二\n🏡城市：杭州市\n🌤️天气：多云\n🫠体感温度：32°C\n☔️降雨概率：40%\n💖今天是我们恋爱的第1684天\n🦌距离小鹿生日还有349天\n🌙距离星河生日还有291天\n🥰今天也要记得好好吃饭哦！\n\nYou needn't be born radiant, but you can keep shining.\n你不必天生闪耀，但可以持续发光。"
 }
 ```
 
@@ -103,12 +107,19 @@ curl -X POST "http://localhost:3000/api/message" \
 | `temperature` | 否 | 文本 | 气温文本；可选。 |
 | `feelsLike` | 否 | 文本 | 体感温度。 |
 | `rainProbability` | 否 | 文本 | 降雨概率。 |
-| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。恋爱天数按包含开始当天计算。 |
+| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。默认按日期差计算恋爱天数。 |
+| `loveCountRule` | 否 | `exclusive` / `inclusive` | 默认 `exclusive`，即日期差；如需包含开始当天，传 `inclusive`。 |
+| `greetingName` | 否 | 文本 | 顶部问候称呼，默认第一个人的 `name`。 |
+| `greetingText` | 否 | 文本 | 顶部问候文字，默认 `早安吖`。 |
+| `closingText` | 否 | 文本 | 结尾提醒文字，默认 `今天也要记得好好吃饭哦！`。 |
+| `emojis` | 否 | 对象 | 可覆盖标题、日期、城市、天气、恋爱天数等行的 emoji。 |
 | `people` | 是 | 数组 | 必须正好两个人，每项包含 `name` 和 `birthday`。 |
 | `people[].name` | 是 | 文本 | 称呼，由快捷指令传入。 |
 | `people[].birthday` | 是 | `MM-DD` | 生日。 |
+| `people[].emoji` | 否 | 文本 | 该人的生日倒计时 emoji，例如 `🦌`、`🌙`。 |
 | `person1Name` / `person1Birthday` | 否 | 文本 / `MM-DD` | 快捷指令不方便传 `people` 数组时使用。 |
 | `person2Name` / `person2Birthday` | 否 | 文本 / `MM-DD` | 快捷指令不方便传 `people` 数组时使用。 |
+| `person1Emoji` / `person2Emoji` | 否 | 文本 | 快捷指令使用扁平字段时传入对应 emoji。 |
 | `quote` | 否 | 对象 | 可直接传 `{ "en": "...", "zh": "..." }` 覆盖每日一句。 |
 | `quoteSource` | 否 | `iciba` / `local` | 默认 `iciba`，失败时自动回退本地句库。 |
 
@@ -167,7 +178,7 @@ GET /api/daily?date=2026-06-23&loveStart=2021-10-01&person1Name=Person%20A&perso
 | 参数 | 必填 | 格式 | 说明 |
 | --- | --- | --- | --- |
 | `date` | 否 | `YYYY-MM-DD` | 要计算的日期；不传时按 `Asia/Shanghai` 的今天计算。 |
-| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。恋爱天数按包含开始当天计算。 |
+| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。默认按日期差计算恋爱天数。 |
 | `person1Name` | 是 | 文本 | 第一个人的称呼，由快捷指令传入。 |
 | `person1Birthday` | 是 | `MM-DD` | 第一个人的生日。 |
 | `person2Name` | 是 | 文本 | 第二个人的称呼，由快捷指令传入。 |
@@ -195,7 +206,7 @@ curl "http://localhost:3000/api/daily?date=2026-06-23&loveStart=2021-10-01&perso
 ```bash
 curl -X POST "http://localhost:3000/api/message" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40%","loveStart":"2022-05-20","people":[{"name":"Person A","birthday":"08-16"},{"name":"Person B","birthday":"11-03"}]}'
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
 ```
 
 ## 部署到 Vercel
@@ -232,7 +243,7 @@ curl "https://你的域名/api/health"
 
 curl -X POST "https://你的域名/api/message" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40%","loveStart":"2022-05-20","people":[{"name":"Person A","birthday":"08-16"},{"name":"Person B","birthday":"11-03"}]}'
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
 ```
 
 ## iOS 快捷指令结构
@@ -296,14 +307,18 @@ curl -X POST "https://你的域名/api/message" \
      "feelsLike": "feelsLike 变量",
      "rainProbability": "rainProbability 变量",
      "loveStart": "2022-05-20",
+     "greetingName": "小鹿",
+     "closingText": "今天也要记得好好吃饭哦！",
      "people": [
        {
-         "name": "第一个人的称呼",
-         "birthday": "08-16"
+         "name": "小鹿",
+         "birthday": "08-16",
+         "emoji": "🦌"
        },
        {
-         "name": "第二个人的称呼",
-         "birthday": "11-03"
+         "name": "星河",
+         "birthday": "11-03",
+         "emoji": "🌙"
        }
      ]
    }
@@ -320,10 +335,14 @@ curl -X POST "https://你的域名/api/message" \
      "feelsLike": "feelsLike 变量",
      "rainProbability": "rainProbability 变量",
      "loveStart": "2022-05-20",
-     "person1Name": "第一个人的称呼",
+     "greetingName": "小鹿",
+     "closingText": "今天也要记得好好吃饭哦！",
+     "person1Name": "小鹿",
      "person1Birthday": "08-16",
-     "person2Name": "第二个人的称呼",
-     "person2Birthday": "11-03"
+     "person1Emoji": "🦌",
+     "person2Name": "星河",
+     "person2Birthday": "11-03",
+     "person2Emoji": "🌙"
    }
    ```
 
