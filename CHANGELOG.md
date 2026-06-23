@@ -2,6 +2,13 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.1.2] - 2026-06-23
+
+### Added
+
+- Added `person1Name`, `person1Birthday`, `person2Name`, and `person2Birthday` as shortcut-friendly alternatives to the nested `people` array.
+- Added support for keyed `people.person1` and `people.person2` dictionaries.
+
 ## [0.1.1] - 2026-06-23
 
 ### Added

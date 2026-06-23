@@ -107,6 +107,8 @@ curl -X POST "http://localhost:3000/api/message" \
 | `people` | 是 | 数组 | 必须正好两个人，每项包含 `name` 和 `birthday`。 |
 | `people[].name` | 是 | 文本 | 称呼，由快捷指令传入。 |
 | `people[].birthday` | 是 | `MM-DD` | 生日。 |
+| `person1Name` / `person1Birthday` | 否 | 文本 / `MM-DD` | 快捷指令不方便传 `people` 数组时使用。 |
+| `person2Name` / `person2Birthday` | 否 | 文本 / `MM-DD` | 快捷指令不方便传 `people` 数组时使用。 |
 | `quote` | 否 | 对象 | 可直接传 `{ "en": "...", "zh": "..." }` 覆盖每日一句。 |
 | `quoteSource` | 否 | `iciba` / `local` | 默认 `iciba`，失败时自动回退本地句库。 |
 
@@ -304,6 +306,24 @@ curl -X POST "https://你的域名/api/message" \
          "birthday": "11-03"
        }
      ]
+   }
+   ```
+
+   如果快捷指令发送后返回 `people must contain exactly two people`，说明嵌套列表没有按 JSON 数组发出去。此时可以改用更简单的扁平字段：
+
+   ```json
+   {
+     "date": "date 变量",
+     "week": "week 变量",
+     "location": "location 变量",
+     "weather": "weather 变量",
+     "feelsLike": "feelsLike 变量",
+     "rainProbability": "rainProbability 变量",
+     "loveStart": "2022-05-20",
+     "person1Name": "第一个人的称呼",
+     "person1Birthday": "08-16",
+     "person2Name": "第二个人的称呼",
+     "person2Birthday": "11-03"
    }
    ```
 

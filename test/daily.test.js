@@ -177,3 +177,50 @@ test("uses location text as city fallback for the full message", () => {
   assert.equal(payload.context.location, "中国\n浙江省\n杭州市 西湖区\n文三路");
   assert.match(payload.message, /杭州市，多云，体感 32°C，降雨概率 40%/);
 });
+
+test("accepts shortcut-friendly flat person fields for the full message", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      location: "中国\n浙江省\n杭州市 西湖区\n文三路",
+      weather: "多云",
+      loveStart: "2026-06-20",
+      person1Name: "小鹿",
+      person1Birthday: "08-16",
+      person2Name: "星河",
+      person2Birthday: "11-03"
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.deepEqual(payload.people.map((person) => person.name), ["小鹿", "星河"]);
+  assert.equal(payload.context.city, "杭州市");
+});
+
+test("accepts keyed person dictionaries for the full message", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      loveStart: "2026-06-20",
+      people: {
+        person1: { name: "小鹿", birthday: "08-16" },
+        person2: { name: "星河", birthday: "11-03" }
+      }
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.deepEqual(payload.people.map((person) => person.name), ["小鹿", "星河"]);
+});

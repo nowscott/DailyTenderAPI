@@ -144,7 +144,7 @@ export function buildMessagePayload(body = {}, options = {}) {
     throw new DailyTenderError("JSON body must be an object.", { field: "body" });
   }
 
-  const people = normalizePeople(body.people);
+  const people = normalizePeople(resolvePeopleInput(body));
   const daily = buildDailyPayload({
     date: body.date,
     timeZone: body.timeZone,
@@ -174,6 +174,32 @@ export function buildMessagePayload(body = {}, options = {}) {
     context,
     message: renderMessage(daily, context)
   };
+}
+
+function resolvePeopleInput(body) {
+  if (body.people !== undefined) {
+    return body.people;
+  }
+
+  if (
+    body.person1Name !== undefined ||
+    body.person1Birthday !== undefined ||
+    body.person2Name !== undefined ||
+    body.person2Birthday !== undefined
+  ) {
+    return [
+      {
+        name: body.person1Name,
+        birthday: body.person1Birthday
+      },
+      {
+        name: body.person2Name,
+        birthday: body.person2Birthday
+      }
+    ];
+  }
+
+  return undefined;
 }
 
 export function extractCityFromLocationText(locationText) {
@@ -300,21 +326,29 @@ function normalizeName(value, fieldName) {
 }
 
 function normalizePeople(people) {
+  if (people && typeof people === "object" && !Array.isArray(people)) {
+    const keyedPeople = [people.person1, people.person2];
+    if (keyedPeople.every(Boolean)) {
+      return keyedPeople.map((person, index) => normalizePerson(person, `people.person${index + 1}`));
+    }
+  }
+
   if (!Array.isArray(people) || people.length !== 2) {
     throw new DailyTenderError("people must contain exactly two people.", { field: "people" });
   }
 
-  return people.map((person, index) => {
-    const fieldPrefix = `people[${index}]`;
-    if (!person || typeof person !== "object" || Array.isArray(person)) {
-      throw new DailyTenderError(`${fieldPrefix} must be an object.`, { field: fieldPrefix });
-    }
+  return people.map((person, index) => normalizePerson(person, `people[${index}]`));
+}
 
-    return {
-      name: normalizeName(person.name, `${fieldPrefix}.name`),
-      birthday: normalizeMonthDay(person.birthday, `${fieldPrefix}.birthday`)
-    };
-  });
+function normalizePerson(person, fieldPrefix) {
+  if (!person || typeof person !== "object" || Array.isArray(person)) {
+    throw new DailyTenderError(`${fieldPrefix} must be an object.`, { field: fieldPrefix });
+  }
+
+  return {
+    name: normalizeName(person.name, `${fieldPrefix}.name`),
+    birthday: normalizeMonthDay(person.birthday, `${fieldPrefix}.birthday`)
+  };
 }
 
 function normalizeOptionalText(value, fieldName) {
