@@ -1,0 +1,143 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  buildDailyPayload,
+  buildInputFromSearchParams,
+  buildMessagePayload,
+  DailyTenderError
+} from "../src/daily.js";
+
+test("builds the shortcut-friendly daily payload with transmitted names", () => {
+  const payload = buildDailyPayload({
+    date: "2026-06-23",
+    loveStartDate: "2026-06-20",
+    person1Name: "Person A",
+    person2Name: "Person B",
+    person1Birthday: "06-23",
+    person2Birthday: "06-22"
+  });
+
+  assert.equal(payload.date, "2026-06-23");
+  assert.equal(payload.loveDays, 4);
+  assert.equal(payload.love.countRule, "inclusive");
+  assert.equal(payload.names.person1, "Person A");
+  assert.equal(payload.names.person2, "Person B");
+  assert.equal(payload.person1BirthdayDays, 0);
+  assert.equal(payload.person2BirthdayDays, 364);
+  assert.equal(payload.birthdays.person1.nextDate, "2026-06-23");
+  assert.equal(payload.birthdays.person2.nextDate, "2027-06-22");
+  assert.deepEqual(payload.people.map((person) => person.name), ["Person A", "Person B"]);
+  assert.equal(typeof payload.quote.en, "string");
+  assert.equal(typeof payload.quote.zh, "string");
+});
+
+test("selects the same daily quote for the same date", () => {
+  const input = {
+    date: "2026-06-23",
+    loveStartDate: "2026-01-01",
+    person1Name: "A",
+    person2Name: "B",
+    person1Birthday: "01-02",
+    person2Birthday: "01-03"
+  };
+
+  assert.deepEqual(buildDailyPayload(input).quote, buildDailyPayload(input).quote);
+});
+
+test("supports leap-day birthdays by jumping to the next valid leap year", () => {
+  const payload = buildDailyPayload({
+    date: "2026-03-01",
+    loveStartDate: "2026-01-01",
+    person1Name: "Person A",
+    person2Name: "Person B",
+    person1Birthday: "02-29",
+    person2Birthday: "03-01"
+  });
+
+  assert.equal(payload.birthdays.person1.nextDate, "2028-02-29");
+  assert.equal(payload.birthdays.person2.days, 0);
+});
+
+test("reads input from query parameters before environment fallbacks", () => {
+  const params = new URLSearchParams({
+    date: "2026-06-23",
+    loveStart: "2026-06-20",
+    person1Name: "Query Person",
+    person1Birthday: "06-23"
+  });
+
+  const input = buildInputFromSearchParams(params, {
+    LOVE_START_DATE: "2020-01-01",
+    PERSON1_NAME: "Env Person 1",
+    PERSON2_NAME: "Env Person 2",
+    PERSON1_BIRTHDAY: "01-01",
+    PERSON2_BIRTHDAY: "12-31"
+  });
+
+  assert.equal(input.loveStartDate, "2026-06-20");
+  assert.equal(input.person1Name, "Query Person");
+  assert.equal(input.person2Name, "Env Person 2");
+  assert.equal(input.person1Birthday, "06-23");
+  assert.equal(input.person2Birthday, "12-31");
+});
+
+test("rejects missing names because names are part of the request contract", () => {
+  assert.throws(
+    () =>
+      buildDailyPayload({
+        date: "2026-06-23",
+        loveStartDate: "2026-01-01",
+        person1Birthday: "01-02",
+        person2Birthday: "01-03"
+      }),
+    DailyTenderError
+  );
+});
+
+test("builds a full message from shortcut JSON input", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      week: "星期二",
+      city: "杭州",
+      weather: "多云",
+      feelsLike: "32°C",
+      rainProbability: "40%",
+      loveStart: "2026-06-20",
+      people: [
+        { name: "Person A", birthday: "06-23" },
+        { name: "Person B", birthday: "06-22" }
+      ]
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(payload.loveDays, 4);
+  assert.equal(payload.person1BirthdayDays, 0);
+  assert.equal(payload.person2BirthdayDays, 364);
+  assert.equal(payload.quoteSource, "test");
+  assert.match(payload.message, /2026-06-23 星期二/);
+  assert.match(payload.message, /杭州，多云，体感 32°C，降雨概率 40%/);
+  assert.match(payload.message, /我们已经在一起 4 天啦。/);
+  assert.match(payload.message, /今天是Person A的生日，生日快乐！/);
+  assert.match(payload.message, /距离Person B的生日还有 364 天。/);
+  assert.match(payload.message, /稳定的爱让普通日子也发光。/);
+});
+
+test("requires exactly two people for the full message endpoint", () => {
+  assert.throws(
+    () =>
+      buildMessagePayload({
+        date: "2026-06-23",
+        loveStart: "2026-06-20",
+        people: [{ name: "Person A", birthday: "06-23" }]
+      }),
+    DailyTenderError
+  );
+});
