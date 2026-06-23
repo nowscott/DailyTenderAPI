@@ -2,9 +2,9 @@
 
 `DailyTenderAPI` 是给 iOS 快捷指令调用的每日问候文案辅助接口项目。
 
-Production: `https://daily-tender.vercel.app`
+Production: `https://dtn.0211120.xyz`
 
-Current version: `0.1.0`
+Current version: `0.1.1`
 
 ## 命名
 
@@ -46,7 +46,7 @@ curl -X POST "http://localhost:3000/api/message" \
   -d '{
     "date": "2026-06-23",
     "week": "星期二",
-    "city": "杭州",
+    "location": "中国\n浙江省\n杭州市 西湖区\n文三路",
     "weather": "多云",
     "feelsLike": "32°C",
     "rainProbability": "40%",
@@ -97,7 +97,8 @@ curl -X POST "http://localhost:3000/api/message" \
 | --- | --- | --- | --- |
 | `date` | 否 | `YYYY-MM-DD` | 要计算的日期；不传时按 `Asia/Shanghai` 的今天计算。 |
 | `week` | 否 | 文本 | 星期文本，例如 `星期二`。 |
-| `city` | 否 | 文本 | 城市。 |
+| `city` | 否 | 文本 | 城市；如果传了会优先使用。 |
+| `location` / `locationText` / `address` | 否 | 文本 | iOS 快捷指令“位置转文本”的原始结果；未传 `city` 时服务端会从这里提取城市。 |
 | `weather` | 否 | 文本 | 天气。 |
 | `temperature` | 否 | 文本 | 气温文本；可选。 |
 | `feelsLike` | 否 | 文本 | 体感温度。 |
@@ -192,7 +193,7 @@ curl "http://localhost:3000/api/daily?date=2026-06-23&loveStart=2021-10-01&perso
 ```bash
 curl -X POST "http://localhost:3000/api/message" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","city":"杭州","weather":"多云","feelsLike":"32°C","rainProbability":"40%","loveStart":"2022-05-20","people":[{"name":"Person A","birthday":"08-16"},{"name":"Person B","birthday":"11-03"}]}'
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40%","loveStart":"2022-05-20","people":[{"name":"Person A","birthday":"08-16"},{"name":"Person B","birthday":"11-03"}]}'
 ```
 
 ## 部署到 Vercel
@@ -203,17 +204,17 @@ curl -X POST "http://localhost:3000/api/message" \
 - `api/daily.js` -> `GET /api/daily`
 - `api/health.js` -> `GET /api/health`
 
-当前推荐域名前缀：`daily-tender`。
+当前对外域名前缀：`dtn`，完整域名为 `dtn.0211120.xyz`。
 
-首次部署时，在 Vercel 项目名里使用 `daily-tender`：
+Vercel 项目名仍可使用 `daily-tender`，对外访问使用自定义域名：
 
 ```bash
 npx vercel --prod
 ```
 
-如果 `daily-tender` 项目名不可用，使用 `daily-tender-api` 作为备选。当前项目已部署到：
+当前项目已部署到：
 
-`https://daily-tender.vercel.app`
+`https://dtn.0211120.xyz`
 
 建议在 Vercel 项目环境变量中设置：
 
@@ -229,7 +230,7 @@ curl "https://你的域名/api/health"
 
 curl -X POST "https://你的域名/api/message" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","city":"杭州","weather":"多云","feelsLike":"32°C","rainProbability":"40%","loveStart":"2022-05-20","people":[{"name":"Person A","birthday":"08-16"},{"name":"Person B","birthday":"11-03"}]}'
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40%","loveStart":"2022-05-20","people":[{"name":"Person A","birthday":"08-16"},{"name":"Person B","birthday":"11-03"}]}'
 ```
 
 ## iOS 快捷指令结构
@@ -254,10 +255,24 @@ curl -X POST "https://你的域名/api/message" \
 3. 获取天气数据
 
    - 动作：`获取当前天气`
-   - 取城市或位置名称，保存为 `city`
    - 取天气状况，保存为 `weather`
    - 取体感温度，保存为 `feelsLike`
    - 取降雨概率，保存为 `rainProbability`
+   - 获取当前位置或天气里的位置
+   - 动作：`文本`
+   - 把位置变量放进文本动作，让快捷指令把位置转成文本
+   - 保存为 `location`
+
+   位置文本可以原样传给服务端，例如：
+
+   ```text
+   中国
+   浙江省
+   杭州市 西湖区
+   文三路
+   ```
+
+   服务端会优先提取包含 `市` 的部分，以上示例会提取为 `杭州市`。如果你在快捷指令里能直接取到城市，也可以继续传 `city`，服务端会优先使用 `city`。
 
 4. 准备固定个人数据
 
@@ -274,7 +289,7 @@ curl -X POST "https://你的域名/api/message" \
    {
      "date": "date 变量",
      "week": "week 变量",
-     "city": "city 变量",
+     "location": "location 变量",
      "weather": "weather 变量",
      "feelsLike": "feelsLike 变量",
      "rainProbability": "rainProbability 变量",

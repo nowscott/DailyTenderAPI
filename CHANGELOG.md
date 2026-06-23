@@ -2,6 +2,13 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.1.1] - 2026-06-23
+
+### Added
+
+- Added `location`, `locationText`, and `address` input support for `POST /api/message`.
+- Added city extraction from raw iOS Shortcuts location text, such as `中国\n浙江省\n杭州市 西湖区\n文三路`.
+
 ## [0.1.0] - 2026-06-23
 
 ### Added

@@ -4,7 +4,8 @@ import {
   buildDailyPayload,
   buildInputFromSearchParams,
   buildMessagePayload,
-  DailyTenderError
+  DailyTenderError,
+  extractCityFromLocationText
 } from "../src/daily.js";
 
 test("builds the shortcut-friendly daily payload with transmitted names", () => {
@@ -140,4 +141,39 @@ test("requires exactly two people for the full message endpoint", () => {
       }),
     DailyTenderError
   );
+});
+
+test("extracts a city from raw iOS location text", () => {
+  const location = "中国\n浙江省\n杭州市 西湖区\n文三路";
+
+  assert.equal(extractCityFromLocationText(location), "杭州市");
+});
+
+test("uses location text as city fallback for the full message", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      week: "星期二",
+      location: "中国\n浙江省\n杭州市 西湖区\n文三路",
+      weather: "多云",
+      feelsLike: "32°C",
+      rainProbability: "40%",
+      loveStart: "2026-06-20",
+      people: [
+        { name: "Person A", birthday: "06-23" },
+        { name: "Person B", birthday: "06-22" }
+      ]
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(payload.context.city, "杭州市");
+  assert.equal(payload.context.location, "中国\n浙江省\n杭州市 西湖区\n文三路");
+  assert.match(payload.message, /杭州市，多云，体感 32°C，降雨概率 40%/);
 });

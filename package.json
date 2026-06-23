@@ -1,11 +1,11 @@
 {
   "name": "daily-tender-api",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "DailyTenderAPI provides date calculations and daily quotes for iOS Shortcuts.",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://daily-tender.vercel.app",
+  "homepage": "https://dtn.0211120.xyz",
   "repository": {
     "type": "git",
     "url": "https://github.com/nowscott/DailyTenderAPI.git"

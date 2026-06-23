@@ -161,7 +161,8 @@ export function buildMessagePayload(body = {}, options = {}) {
   const context = {
     date: daily.date,
     week: normalizeOptionalText(body.week, "week"),
-    city: normalizeOptionalText(body.city, "city"),
+    city: resolveCity(body),
+    location: normalizeOptionalText(body.location || body.locationText || body.address, "location"),
     weather: normalizeOptionalText(body.weather, "weather"),
     temperature: normalizeOptionalText(body.temperature, "temperature"),
     feelsLike: normalizeOptionalText(body.feelsLike, "feelsLike"),
@@ -173,6 +174,33 @@ export function buildMessagePayload(body = {}, options = {}) {
     context,
     message: renderMessage(daily, context)
   };
+}
+
+export function extractCityFromLocationText(locationText) {
+  const text = normalizeOptionalText(locationText, "location");
+  if (!text) {
+    return undefined;
+  }
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const cityLine = lines.find((line) => /[\u4e00-\u9fa5A-Za-z0-9]+市(?:\s|$)/.test(line));
+  if (cityLine) {
+    const match = cityLine.match(/([\u4e00-\u9fa5A-Za-z0-9]+市)(?:\s|$)/);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  const regionLine = lines.find((line) => /[\u4e00-\u9fa5A-Za-z0-9]+(?:区|县|镇|街道)(?:\s|$)/.test(line));
+  if (regionLine) {
+    return regionLine.split(/\s+/)[0];
+  }
+
+  return lines[0];
 }
 
 export function buildInputFromSearchParams(searchParams, env = process.env) {
@@ -252,6 +280,15 @@ function renderMessage(daily, context) {
   lines.push(daily.quote.en);
 
   return lines.join("\n");
+}
+
+function resolveCity(body) {
+  const explicitCity = normalizeOptionalText(body.city, "city");
+  if (explicitCity) {
+    return explicitCity;
+  }
+
+  return extractCityFromLocationText(body.location || body.locationText || body.address);
 }
 
 function normalizeName(value, fieldName) {
