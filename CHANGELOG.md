@@ -2,6 +2,12 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.7] - 2026-06-24
+
+### Fixed
+
+- Round numeric `rainProbability` values before rendering so floating-point weather inputs such as `57.999999999999993` display as `58%`.
+
 ## [0.2.6] - 2026-06-24
 
 ### Added

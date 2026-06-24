@@ -644,6 +644,7 @@ export function renderHomePage() {
                     <tbody>
                       <tr><td><code>date</code></td><td>yyyy-MM-dd 日期，缺省时按 Asia/Shanghai 的今天计算。</td></tr>
                       <tr><td><code>location</code></td><td>快捷指令位置转文本的原始内容，服务端会提取城市。</td></tr>
+                      <tr><td><code>rainProbability</code></td><td>降雨概率，服务端会取整并补百分号。</td></tr>
                       <tr><td><code>loveStart</code></td><td>恋爱开始日期，默认按日期差计算第几天。</td></tr>
                       <tr><td><code>people[].calendar</code></td><td>农历生日传 lunar；不传就是公历。</td></tr>
                       <tr><td><code>people[].emoji</code></td><td>每个人生日倒计时行前面的 emoji。</td></tr>

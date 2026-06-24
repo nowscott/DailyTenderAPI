@@ -231,6 +231,36 @@ test("renders the final send-ready morning message template", () => {
   );
 });
 
+test("rounds decimal rain probability values before rendering", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-24",
+      week: "星期三",
+      location: "中国\n广东省\n广州市 番禺区\n丽景园大街",
+      weather: "局部多云",
+      feelsLike: "32°C",
+      rainProbability: 57.999999999999993,
+      loveStart: "2022-11-12",
+      to: "小宝",
+      closingText: "今天也要记得好好吃饭哦！",
+      people: [
+        { name: "宝宝", birthday: "06-07", emoji: "🐣" },
+        { name: "哞哞", birthday: "04-10", emoji: "🐮" }
+      ]
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(payload.context.rainProbability, "58%");
+  assert.match(payload.message, /☔️降雨概率：58%/);
+});
+
 test("requires exactly two people for the full message endpoint", () => {
   assert.throws(
     () =>

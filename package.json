@@ -1,6 +1,6 @@
 {
   "name": "daily-tender-api",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "private": true,
   "description": "DailyTenderAPI provides date calculations and daily quotes for iOS Shortcuts.",
   "type": "module",

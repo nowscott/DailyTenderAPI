@@ -760,6 +760,16 @@ function formatRainProbability(value) {
     return undefined;
   }
 
+  const numericPercent = value.match(
+    /^([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)\s*(?:[%％])?$/i
+  );
+  if (numericPercent) {
+    const numericValue = Number(numericPercent[1]);
+    if (Number.isFinite(numericValue)) {
+      return `${Math.round(numericValue)}%`;
+    }
+  }
+
   return value.includes("%") || value.includes("％") ? value : `${value}%`;
 }
 

@@ -68,7 +68,7 @@ curl -X POST "http://localhost:3000/api/message" \
 
 几个细节：
 
-- `rainProbability` 可以传 `35` 或 `35%`，服务端会补齐百分号。
+- `rainProbability` 可以传 `35`、`35%` 或 `57.999999999999993`，服务端会取整并补齐百分号。
 - `location` 可以传 iOS 快捷指令“位置转文本”的原始结果，服务端会尽量提取城市。
 - `quoteSource` 默认是 `iciba`；示例里用 `local` 是为了让测试结果不依赖远程接口。
 
@@ -86,7 +86,7 @@ curl -X POST "http://localhost:3000/api/message" \
 | `week` | `星期二` | 当前星期；如果系统输出英文，可在快捷指令里映射。 |
 | `weather` | `晴间多云` | 天气状况。 |
 | `feelsLike` | `29°C` | 体感温度。 |
-| `rainProbability` | `35` | 降雨概率，是否带 `%` 都可以。 |
+| `rainProbability` | `35` | 降雨概率，是否带 `%` 都可以；服务端会取整。 |
 | `location` | `中国\n浙江省\n杭州市 西湖区\n文三路` | 位置文本；能直接拿到城市时也可以传 `city`。 |
 
 位置文本不需要在快捷指令里拆得很细。下面两种都可以被识别为 `杭州市`：
@@ -168,7 +168,7 @@ curl -X POST "http://localhost:3000/api/message" \
 | `location` / `locationText` / `address` | 否 | 文本 | iOS 快捷指令“位置转文本”的原始结果；未传 `city` 时服务端会提取城市。 |
 | `weather` | 否 | 文本 | 天气。 |
 | `feelsLike` | 否 | 文本 | 体感温度。 |
-| `rainProbability` | 否 | 文本 | 降雨概率。 |
+| `rainProbability` | 否 | 数字或文本 | 降雨概率，服务端会取整并补 `%`。 |
 | `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。 |
 | `loveCountRule` | 否 | `exclusive` / `inclusive` | 默认 `exclusive`，即日期差；传 `inclusive` 会包含开始当天。 |
 | `to` | 否 | 文本 | 顶部问候称呼，默认第一个人的 `name`。 |
