@@ -1,0 +1,54 @@
+name: Archive Iciba quote
+
+on:
+  schedule:
+    # GitHub cron uses UTC. This runs at 00:30 in Asia/Shanghai.
+    - cron: "30 16 * * *"
+  workflow_dispatch:
+    inputs:
+      quote_date:
+        description: "Optional quote date in YYYY-MM-DD, Asia/Shanghai"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Fetch Iciba quote
+        env:
+          QUOTE_DATE: ${{ inputs.quote_date }}
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if npm run quotes:fetch; then
+              exit 0
+            fi
+
+            if [ "$attempt" = "6" ]; then
+              exit 1
+            fi
+
+            echo "Iciba quote is not ready yet. Retrying in 10 minutes..."
+            sleep 600
+          done
+
+      - name: Run tests
+        run: npm test
+
+      - name: Commit quote archive
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Archive Iciba quote"
+          file_pattern: data/quotes/iciba.json

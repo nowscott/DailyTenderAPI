@@ -1,7 +1,10 @@
 import { DEFAULT_QUOTES, selectQuote } from "./daily.js";
+import { readFile } from "node:fs/promises";
 
 const ICIBA_DAILY_URL = "https://open.iciba.com/dsapi/";
+const ICIBA_ARCHIVE_URL = new URL("../data/quotes/iciba.json", import.meta.url);
 const remoteQuoteCache = new Map();
+let quoteArchivePromise;
 
 export async function getDailyQuote(options = {}) {
   const date = options.date;
@@ -23,6 +26,14 @@ export async function getDailyQuote(options = {}) {
   }
 
   try {
+    const archivedQuote = await getArchivedQuote(date, options);
+    if (archivedQuote) {
+      return {
+        quote: archivedQuote,
+        quoteSource: "iciba-cache"
+      };
+    }
+
     const cacheKey = date || "today";
     if (!options.fetchImpl && remoteQuoteCache.has(cacheKey)) {
       return {
@@ -46,6 +57,36 @@ export async function getDailyQuote(options = {}) {
       quoteSource: "local-fallback"
     };
   }
+}
+
+async function getArchivedQuote(date, options = {}) {
+  if (!date || options.fetchImpl) {
+    return undefined;
+  }
+
+  const archive = options.quoteArchive || (await loadQuoteArchive());
+  const quote = archive[date];
+  if (!quote || typeof quote.en !== "string" || typeof quote.zh !== "string") {
+    return undefined;
+  }
+
+  return {
+    en: quote.en.trim(),
+    zh: quote.zh.trim()
+  };
+}
+
+async function loadQuoteArchive() {
+  quoteArchivePromise ||= readFile(ICIBA_ARCHIVE_URL, "utf8")
+    .then((content) => JSON.parse(content))
+    .catch((error) => {
+      if (error.code === "ENOENT") {
+        return {};
+      }
+      throw error;
+    });
+
+  return quoteArchivePromise;
 }
 
 async function fetchIcibaQuote(options = {}) {

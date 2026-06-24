@@ -23,6 +23,26 @@ test("uses Iciba content and note when the remote request succeeds", async () =>
   });
 });
 
+test("uses the archived Iciba quote before making a remote request", async () => {
+  const result = await getDailyQuote({
+    date: "2026-06-24",
+    quoteArchive: {
+      "2026-06-24": {
+        en: "Archived English quote.",
+        zh: "已留存的中文短句。"
+      }
+    }
+  });
+
+  assert.deepEqual(result, {
+    quote: {
+      en: "Archived English quote.",
+      zh: "已留存的中文短句。"
+    },
+    quoteSource: "iciba-cache"
+  });
+});
+
 test("falls back to local quotes when Iciba fails", async () => {
   const result = await getDailyQuote({
     date: "2026-06-23",

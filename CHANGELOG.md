@@ -2,6 +2,19 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.4] - 2026-06-24
+
+### Added
+
+- Added a daily GitHub Actions workflow that archives Iciba quotes into `data/quotes/iciba.json`.
+- Added `npm run quotes:fetch` for manually fetching and archiving a quote by date.
+- Added runtime support for loading archived quote entries before calling the remote Iciba API.
+
+### Changed
+
+- Reworked the README into a clearer guide-style structure.
+- Return `quoteSource: "iciba-cache"` when a message uses an archived quote.
+
 ## [0.2.3] - 2026-06-24
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "name": "daily-tender-api",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "description": "DailyTenderAPI provides date calculations and daily quotes for iOS Shortcuts.",
   "type": "module",
@@ -13,6 +13,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
+    "quotes:fetch": "node scripts/fetch-iciba-quote.mjs",
     "test": "node --test"
   },
   "engines": {

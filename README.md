@@ -1,44 +1,49 @@
-# DailyTenderAPI
+# DailyTenderAPI：把每日问候从快捷指令里拆出来
 
-`DailyTenderAPI` 是给 iOS 快捷指令调用的每日问候文案辅助接口项目。
+DailyTenderAPI 是一个给 iOS 快捷指令调用的每日问候消息接口。
 
-Production: `https://dtn.0211120.xyz`
+它把原本容易堆在快捷指令里的日期计算、生日倒计时、城市提取、每日短句和文本拼接放到服务端处理。手机端只负责采集当天的数据，然后把 JSON 发给接口；接口返回一段可以直接发送的 `message`。
 
-The homepage is a Bootstrap-based landing page with a live API tester: `https://dtn.0211120.xyz`
+线上地址：
 
-## 命名
+- 主页与在线测试：`https://dtn.0211120.xyz`
+- 推荐接口：`POST https://dtn.0211120.xyz/api/message`
+- 健康检查：`GET https://dtn.0211120.xyz/api/health`
 
-- 项目名：`DailyTenderAPI`
-- 网站前缀：`daily-tender`
-- 建议域名形式：`daily-tender.example.com`
-- Git 仓库名建议：`DailyTenderAPI`
-- Vercel 项目名建议：`daily-tender`
+## 适合什么场景
 
-域名前缀推荐使用 `daily-tender`。它比 `daily-tender-api` 更适合快捷指令访问：短、清晰，而且不会把实现方式固定成 API 项目；如果 Vercel 项目名或子域名已被占用，再使用 `daily-tender-api` 作为备选。
+如果你已经在用 iOS 快捷指令做每日问候，通常会遇到几个问题：
 
-## 设计边界
+- 日期差、生日倒计时、星期和天气文本都写在快捷指令里，维护起来很碎。
+- 快捷指令里拼多行消息不直观，稍微换个文案就要改很多动作。
+- 每日一句、城市解析这类逻辑不应该固定在手机端。
+- 两个人的称呼、生日、emoji 需要保留在请求里，而不是写死在服务端。
 
-快捷指令继续负责：
+DailyTenderAPI 的边界很简单：快捷指令采集事实，接口生成消息。
 
-- 获取当天日期、星期、城市、天气、体感温度和降雨概率。
-- 把这些原始数据用 JSON 传给接口。
-- 发送接口返回的最终消息。
-- 保留可在手机上临时调整的称呼、语气和固定句子。
+## 它会返回什么
 
-网页接口负责：
+一次完整请求会返回结构化字段和最终消息。快捷指令里只需要取出 `message` 发送即可。
 
-- 计算恋爱纪念日天数。
-- 计算两个生日倒计时。
-- 返回每日英文短句和中文翻译。
-- 生成完整最终消息，降低快捷指令里的条件判断、日期计算和文本拼接复杂度。
+```text
+🌞早安吖小鹿
+📆2026年06月23日 星期二
+🏡城市：杭州市
+🌤️天气：晴间多云
+🫠体感温度：29°C
+☔️降雨概率：35%
+💖今天是我们恋爱的第1495天
+🦌距离小鹿生日还有54天
+🌙距离星河生日还有133天
+🥰今天也要记得好好吃饭哦！
 
-## 推荐接口
+May the day treat you kindly, and may you treat yourself kindly too.
+愿今天善待你，也愿你同样善待自己。
+```
 
-`POST /api/message`
+## 最快试一次
 
-快捷指令把已获取到的天气、日期和两个人信息传给接口；接口返回可直接发送的 `message`，并同时保留结构化字段便于调试。
-
-示例请求：
+本地运行后可以直接用下面的请求测试：
 
 ```bash
 curl -X POST "http://localhost:3000/api/message" \
@@ -49,10 +54,11 @@ curl -X POST "http://localhost:3000/api/message" \
     "location": "中国\n浙江省\n杭州市 西湖区\n文三路",
     "weather": "晴间多云",
     "feelsLike": "29°C",
-    "rainProbability": "35%",
+    "rainProbability": "35",
     "loveStart": "2022-05-20",
     "greetingName": "小鹿",
     "closingText": "今天也要记得好好吃饭哦！",
+    "quoteSource": "local",
     "people": [
       { "name": "小鹿", "birthday": "08-16", "emoji": "🦌" },
       { "name": "星河", "birthday": "11-03", "emoji": "🌙" }
@@ -60,153 +66,179 @@ curl -X POST "http://localhost:3000/api/message" \
   }'
 ```
 
-返回示例：
+几个细节：
+
+- `rainProbability` 可以传 `35` 或 `35%`，服务端会补齐百分号。
+- `location` 可以传 iOS 快捷指令“位置转文本”的原始结果，服务端会尽量提取城市。
+- `quoteSource` 默认是 `iciba`；示例里用 `local` 是为了让测试结果不依赖远程接口。
+
+## 快捷指令怎么接
+
+推荐把快捷指令压缩成 4 个动作区块。
+
+### 1. 采集日期、天气和位置
+
+在快捷指令里准备这些变量：
+
+| 变量 | 示例 | 说明 |
+| --- | --- | --- |
+| `date` | `2026-06-23` | 当前日期，格式为 `yyyy-MM-dd`。 |
+| `week` | `星期二` | 当前星期；如果系统输出英文，可在快捷指令里映射。 |
+| `weather` | `晴间多云` | 天气状况。 |
+| `feelsLike` | `29°C` | 体感温度。 |
+| `rainProbability` | `35` | 降雨概率，是否带 `%` 都可以。 |
+| `location` | `中国\n浙江省\n杭州市 西湖区\n文三路` | 位置文本；能直接拿到城市时也可以传 `city`。 |
+
+位置文本不需要在快捷指令里拆得很细。下面两种都可以被识别为 `杭州市`：
+
+```text
+中国
+浙江省
+杭州市 西湖区
+文三路
+```
+
+```text
+中国
+浙江省杭州市西湖区文三路
+```
+
+### 2. 准备固定个人数据
+
+最推荐使用 `people` 数组。它正好包含两个人，每个人写 `name`、`birthday` 和可选的 `emoji`。
 
 ```json
 {
-  "date": "2026-06-23",
-  "loveDays": 1495,
-  "person1BirthdayDays": 54,
-  "person2BirthdayDays": 133,
+  "loveStart": "2022-05-20",
   "people": [
-    {
-      "key": "person1",
-      "name": "小鹿",
-      "birthday": "08-16",
-      "birthdayDays": 54,
-      "nextBirthday": "2026-08-16",
-      "emoji": "🦌"
-    },
-    {
-      "key": "person2",
-      "name": "星河",
-      "birthday": "11-03",
-      "birthdayDays": 133,
-      "nextBirthday": "2026-11-03",
-      "emoji": "🌙"
-    }
-  ],
-  "quote": {
-    "en": "You needn't be born radiant, but you can keep shining.",
-    "zh": "你不必天生闪耀，但可以持续发光。"
-  },
-  "quoteSource": "iciba",
-  "message": "🌞早安吖小鹿\n📆2026年06月23日 星期二\n🏡城市：杭州市\n🌤️天气：晴间多云\n🫠体感温度：29°C\n☔️降雨概率：35%\n💖今天是我们恋爱的第1495天\n🦌距离小鹿生日还有54天\n🌙距离星河生日还有133天\n🥰今天也要记得好好吃饭哦！\n\nYou needn't be born radiant, but you can keep shining.\n你不必天生闪耀，但可以持续发光。"
+    { "name": "小鹿", "birthday": "08-16", "emoji": "🦌" },
+    { "name": "星河", "birthday": "11-03", "emoji": "🌙" }
+  ]
 }
 ```
 
-### JSON 参数
+如果 iOS 快捷指令不方便发送数组，可以改用扁平字段：
+
+```json
+{
+  "person1Name": "小鹿",
+  "person1Birthday": "08-16",
+  "person1Emoji": "🦌",
+  "person2Name": "星河",
+  "person2Birthday": "11-03",
+  "person2Emoji": "🌙"
+}
+```
+
+### 3. 调用接口
+
+使用“获取 URL 内容”动作：
+
+- URL：`https://dtn.0211120.xyz/api/message`
+- 方法：`POST`
+- 请求体：`JSON`
+- 请求内容：上面准备好的日期、天气、位置和个人数据词典。
+
+### 4. 发送结果
+
+接口返回后，从词典里取 `message`，交给“发送信息”或其他发送动作。
+
+调试时可以顺手看这些字段：
+
+- `loveDays`：恋爱天数。
+- `person1BirthdayDays` / `person2BirthdayDays`：生日倒计时。
+- `quoteSource`：每日一句来源；如果是 `iciba-cache`，说明使用了仓库里按日期留存的词霸短句；如果是 `local-fallback`，说明远程短句当次不可用，服务已自动回退。
+
+## API 说明
+
+### POST /api/message
+
+这个接口面向快捷指令使用。它接收当天上下文和两个人的信息，返回完整 `message`。
+
+#### 请求字段
 
 | 参数 | 必填 | 格式 | 说明 |
 | --- | --- | --- | --- |
 | `date` | 否 | `YYYY-MM-DD` | 要计算的日期；不传时按 `Asia/Shanghai` 的今天计算。 |
 | `week` | 否 | 文本 | 星期文本，例如 `星期二`。 |
 | `city` | 否 | 文本 | 城市；如果传了会优先使用。 |
-| `location` / `locationText` / `address` | 否 | 文本 | iOS 快捷指令“位置转文本”的原始结果；未传 `city` 时服务端会从这里提取城市。 |
+| `location` / `locationText` / `address` | 否 | 文本 | iOS 快捷指令“位置转文本”的原始结果；未传 `city` 时服务端会提取城市。 |
 | `weather` | 否 | 文本 | 天气。 |
-| `temperature` | 否 | 文本 | 气温文本；可选。 |
 | `feelsLike` | 否 | 文本 | 体感温度。 |
 | `rainProbability` | 否 | 文本 | 降雨概率。 |
-| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。默认按日期差计算恋爱天数。 |
-| `loveCountRule` | 否 | `exclusive` / `inclusive` | 默认 `exclusive`，即日期差；如需包含开始当天，传 `inclusive`。 |
+| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。 |
+| `loveCountRule` | 否 | `exclusive` / `inclusive` | 默认 `exclusive`，即日期差；传 `inclusive` 会包含开始当天。 |
 | `greetingName` | 否 | 文本 | 顶部问候称呼，默认第一个人的 `name`。 |
 | `greetingText` | 否 | 文本 | 顶部问候文字，默认 `早安吖`。 |
-| `closingText` | 否 | 文本 | 结尾提醒文字，默认 `今天也要记得好好吃饭哦！`。 |
-| `emojis` | 否 | 对象 | 可覆盖标题、日期、城市、天气、恋爱天数等行的 emoji。 |
-| `people` | 是 | 数组 | 必须正好两个人，每项包含 `name` 和 `birthday`。 |
+| `closingText` | 否 | 文本 | 结尾提醒文案。 |
+| `emojis` | 否 | 对象 | 覆盖问候、日期、城市、天气、恋爱天数等行的 emoji。 |
+| `people` | 是 | 数组或对象 | 推荐传正好两个人；也支持 `people.person1` / `people.person2`。 |
 | `people[].name` | 是 | 文本 | 称呼，由快捷指令传入。 |
 | `people[].birthday` | 是 | `MM-DD` | 生日。 |
-| `people[].emoji` | 否 | 文本 | 该人的生日倒计时 emoji，例如 `🦌`、`🌙`。 |
-| `person1Name` / `person1Birthday` | 否 | 文本 / `MM-DD` | 快捷指令不方便传 `people` 数组时使用。 |
-| `person2Name` / `person2Birthday` | 否 | 文本 / `MM-DD` | 快捷指令不方便传 `people` 数组时使用。 |
-| `person1Emoji` / `person2Emoji` | 否 | 文本 | 快捷指令使用扁平字段时传入对应 emoji。 |
-| `quote` | 否 | 对象 | 可直接传 `{ "en": "...", "zh": "..." }` 覆盖每日一句。 |
-| `quoteSource` | 否 | `iciba` / `local` | 默认 `iciba`，失败时自动回退本地句库。 |
+| `people[].emoji` | 否 | 文本 | 生日倒计时行前面的 emoji。 |
+| `person1Name` / `person1Birthday` | 否 | 文本 / `MM-DD` | 不方便传 `people` 时使用。 |
+| `person2Name` / `person2Birthday` | 否 | 文本 / `MM-DD` | 不方便传 `people` 时使用。 |
+| `person1Emoji` / `person2Emoji` | 否 | 文本 | 扁平字段模式下的 emoji。 |
+| `quote` | 否 | 对象 | 传 `{ "en": "...", "zh": "..." }` 可覆盖每日一句。 |
+| `quoteSource` | 否 | `iciba` / `local` | 默认 `iciba`，失败时自动回退本地短句。 |
+| `timeZone` | 否 | IANA 时区 | 默认 `Asia/Shanghai`。 |
 
-每日一句逻辑来自 AutoCare 里的词霸每日金句方案：请求 `http://open.iciba.com/dsapi/`，英文使用 `content`，中文使用 `note`。如果词霸接口不可用，DailyTenderAPI 会自动使用本地短句库。
+#### 返回字段
 
-## 结构化接口
+| 字段 | 说明 |
+| --- | --- |
+| `date` | 实际参与计算的日期。 |
+| `loveDays` | 恋爱天数。 |
+| `people` | 两个人的生日倒计时、下一次生日和 emoji。 |
+| `quote` | 英文短句和中文翻译。 |
+| `quoteSource` | `iciba-cache`、`iciba`、`local`、`local-fallback` 或 `provided`。 |
+| `context` | 城市、天气、体感温度、降雨概率等中间上下文。 |
+| `message` | 可以直接发送的最终文本。 |
 
-`GET /api/daily`
+### GET /api/daily
 
-这个接口保留给只想获取结构化数据、仍由快捷指令自己拼文案的场景。两个人的称呼也作为传输数据的一部分，不在服务端硬编码。
-
-示例请求：
+这个接口只返回结构化数据，适合仍想在快捷指令里自己拼文案的情况。
 
 ```text
-GET /api/daily?date=2026-06-23&loveStart=2021-10-01&person1Name=Person%20A&person1Birthday=05-20&person2Name=Person%20B&person2Birthday=12-01
+GET /api/daily?date=2026-06-23&loveStart=2022-05-20&person1Name=Person%20A&person1Birthday=08-16&person2Name=Person%20B&person2Birthday=11-03
 ```
 
-返回示例：
-
-```json
-{
-  "date": "2026-06-23",
-  "timeZone": "Asia/Shanghai",
-  "names": {
-    "person1": "Person A",
-    "person2": "Person B"
-  },
-  "loveDays": 1495,
-  "person1BirthdayDays": 331,
-  "person2BirthdayDays": 161,
-  "people": [
-    {
-      "key": "person1",
-      "name": "Person A",
-      "birthday": "05-20",
-      "birthdayDays": 331,
-      "nextBirthday": "2027-05-20"
-    },
-    {
-      "key": "person2",
-      "name": "Person B",
-      "birthday": "12-01",
-      "birthdayDays": 161,
-      "nextBirthday": "2026-12-01"
-    }
-  ],
-  "quote": {
-    "en": "You needn't be born radiant, but you can keep shining.",
-    "zh": "你不必天生闪耀，但可以持续发光。"
-  }
-}
-```
-
-## 请求参数
+请求字段：
 
 | 参数 | 必填 | 格式 | 说明 |
 | --- | --- | --- | --- |
 | `date` | 否 | `YYYY-MM-DD` | 要计算的日期；不传时按 `Asia/Shanghai` 的今天计算。 |
-| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。默认按日期差计算恋爱天数。 |
-| `person1Name` | 是 | 文本 | 第一个人的称呼，由快捷指令传入。 |
+| `loveStart` / `loveStartDate` | 是 | `YYYY-MM-DD` | 恋爱开始日期。 |
+| `person1Name` | 是 | 文本 | 第一个人的称呼。 |
 | `person1Birthday` | 是 | `MM-DD` | 第一个人的生日。 |
-| `person2Name` | 是 | 文本 | 第二个人的称呼，由快捷指令传入。 |
+| `person2Name` | 是 | 文本 | 第二个人的称呼。 |
 | `person2Birthday` | 是 | `MM-DD` | 第二个人的生日。 |
 | `timeZone` | 否 | IANA 时区 | 默认 `Asia/Shanghai`。 |
 | `quoteMode` | 否 | `daily` / `random` | 默认 `daily`，同一天稳定返回同一句。 |
 
-服务端也支持 `.env` 环境变量作为兜底配置，见 `.env.example`。但为了避免把私人称呼固定写死，更推荐快捷指令每次请求时传入 `person1Name` 和 `person2Name`。
+### GET /api/health
 
-## 本地运行
+健康检查接口，用于部署后确认服务是否正常响应。
+
+## 本地开发
 
 ```bash
 npm test
 npm start
 ```
 
-本地验证结构化接口：
+默认监听 `http://localhost:3000`。如果端口被占用，可以临时换端口：
 
 ```bash
-curl "http://localhost:3000/api/daily?date=2026-06-23&loveStart=2021-10-01&person1Name=Person%20A&person1Birthday=05-20&person2Name=Person%20B&person2Birthday=12-01"
+PORT=3001 npm start
 ```
 
-本地验证完整消息接口：
+本地检查建议跑这几项：
 
 ```bash
-curl -X POST "http://localhost:3000/api/message" \
-  -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"晴间多云","feelsLike":"29°C","rainProbability":"35","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
+npm test
+npm audit --omit=dev
+git diff --check
 ```
 
 ## 部署到 Vercel
@@ -217,157 +249,65 @@ curl -X POST "http://localhost:3000/api/message" \
 - `api/daily.js` -> `GET /api/daily`
 - `api/health.js` -> `GET /api/health`
 
-当前对外域名前缀：`dtn`，完整域名为 `dtn.0211120.xyz`。
-
-Vercel 项目名仍可使用 `daily-tender`，对外访问使用自定义域名：
+当前 Vercel 项目名使用 `daily-tender`，对外访问使用自定义域名 `dtn.0211120.xyz`。
 
 ```bash
 npx vercel --prod
 ```
 
-当前项目已部署到：
-
-`https://dtn.0211120.xyz`
-
-建议在 Vercel 项目环境变量中设置：
+建议环境变量：
 
 | 变量 | 建议值 | 说明 |
 | --- | --- | --- |
 | `TIME_ZONE` | `Asia/Shanghai` | 不传 `date` 时用于取今天。 |
 | `QUOTE_SOURCE` | `iciba` | 默认词霸每日金句；失败自动回退本地短句。 |
 
-部署后验证：
+部署后至少检查：
 
 ```bash
-curl "https://你的域名/api/health"
-
-curl -X POST "https://你的域名/api/message" \
-  -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"晴间多云","feelsLike":"29°C","rainProbability":"35","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
+curl "https://dtn.0211120.xyz/api/health"
+curl -I "https://dtn.0211120.xyz/icon.svg"
+curl -I "https://dtn.0211120.xyz/site.webmanifest"
 ```
 
-## iOS 快捷指令结构
+## 每日一句留存
 
-推荐快捷指令只做“采集数据 + 调接口 + 发送结果”。
+项目使用 GitHub Actions 每天北京时间 00:30 抓取一次词霸每日一句，写入单一 JSON 文件：
 
-1. 获取当前日期
+```text
+data/quotes/iciba.json
+```
 
-   - 动作：`当前日期`
-   - 动作：`格式化日期`
-   - 格式：`自定义`
-   - 格式字符串：`yyyy-MM-dd`
-   - 保存为变量：`date`
+接口生成消息时会先按 `date` 查这个文件。命中时返回 `quoteSource: "iciba-cache"`；没有命中才请求词霸远程接口；远程不可用时再回退到本地短句库。
 
-2. 获取星期
+手动补某一天的数据：
 
-   - 对同一个当前日期再执行一次 `格式化日期`
-   - 格式字符串：`EEEE`
-   - 如果系统输出是英文，可在快捷指令里映射成 `星期一` 到 `星期日`
-   - 保存为变量：`week`
+```bash
+QUOTE_DATE=2026-06-24 node scripts/fetch-iciba-quote.mjs
+```
 
-3. 获取天气数据
+## 命名约定
 
-   - 动作：`获取当前天气`
-   - 取天气状况，保存为 `weather`
-   - 取体感温度，保存为 `feelsLike`
-   - 取降雨概率，保存为 `rainProbability`
-   - 获取当前位置或天气里的位置
-   - 动作：`文本`
-   - 把位置变量放进文本动作，让快捷指令把位置转成文本
-   - 保存为 `location`
+- 项目名：`DailyTenderAPI`
+- 网站前缀：`daily-tender`
+- Vercel 项目名：`daily-tender`
+- 当前生产域名：`dtn.0211120.xyz`
 
-   位置文本可以原样传给服务端，例如：
+`daily-tender` 比 `daily-tender-api` 更适合放在域名或项目名里：它短一些，也不会把未来形态固定成“只有 API”。
 
-   ```text
-   中国
-   浙江省
-   杭州市 西湖区
-   文三路
-   ```
+## 常见问题
 
-   服务端会优先提取包含 `市` 的部分，以上示例会提取为 `杭州市`。如果你在快捷指令里能直接取到城市，也可以继续传 `city`，服务端会优先使用 `city`。
+### 为什么 `people must contain exactly two people`？
 
-4. 准备固定个人数据
+`POST /api/message` 默认需要两个人。如果 iOS 快捷指令没有正确发出 JSON 数组，改用 `person1Name`、`person1Birthday`、`person2Name`、`person2Birthday` 这组扁平字段。
 
-   - `loveStart`：恋爱开始日期，例如 `2022-05-20`
-   - `people`：正好两个人，每个人包含：
-     - `name`：访问接口时传入的称呼
-     - `birthday`：`MM-DD` 格式生日，例如 `08-16`
+### 为什么 `quoteSource` 是 `local-fallback`？
 
-5. 生成 JSON 请求体
+默认每日一句优先使用 `data/quotes/iciba.json` 里的日期留存，然后才请求词霸接口：`https://open.iciba.com/dsapi/`。如果留存没有命中、远程接口当次也不可用，服务会自动回退到本地短句库。
 
-   在快捷指令里用“词典”动作创建：
+### 为什么非法请求返回 400？
 
-   ```json
-   {
-     "date": "date 变量",
-     "week": "week 变量",
-     "location": "location 变量",
-     "weather": "weather 变量",
-     "feelsLike": "feelsLike 变量",
-     "rainProbability": "rainProbability 变量",
-     "loveStart": "2022-05-20",
-     "greetingName": "小鹿",
-     "closingText": "今天也要记得好好吃饭哦！",
-     "people": [
-       {
-         "name": "小鹿",
-         "birthday": "08-16",
-         "emoji": "🦌"
-       },
-       {
-         "name": "星河",
-         "birthday": "11-03",
-         "emoji": "🌙"
-       }
-     ]
-   }
-   ```
-
-   如果快捷指令发送后返回 `people must contain exactly two people`，说明嵌套列表没有按 JSON 数组发出去。此时可以改用更简单的扁平字段：
-
-   ```json
-   {
-     "date": "date 变量",
-     "week": "week 变量",
-     "location": "location 变量",
-     "weather": "weather 变量",
-     "feelsLike": "feelsLike 变量",
-     "rainProbability": "rainProbability 变量",
-     "loveStart": "2022-05-20",
-     "greetingName": "小鹿",
-     "closingText": "今天也要记得好好吃饭哦！",
-     "person1Name": "小鹿",
-     "person1Birthday": "08-16",
-     "person1Emoji": "🦌",
-     "person2Name": "星河",
-     "person2Birthday": "11-03",
-     "person2Emoji": "🌙"
-   }
-   ```
-
-6. 调用接口
-
-   - 动作：`获取 URL 内容`
-   - URL：`https://你的域名/api/message`
-   - 方法：`POST`
-   - 请求体：`JSON`
-   - 请求体内容：上一步创建的词典
-
-7. 读取结果并发送
-
-   - 从返回的词典里取 `message`
-   - 用“发送信息”或其他发送动作直接发送 `message`
-
-调试时可以额外查看这些字段：`loveDays`、`person1BirthdayDays`、`person2BirthdayDays`、`quoteSource`。如果 `quoteSource` 是 `local-fallback`，说明词霸接口当次不可用，服务已自动使用本地短句。
-
-## 后续待定
-
-- 确认恋爱开始日期。
-- 确认两个生日的月日。
-- 真实称呼由快捷指令通过 `people` 传输，不在服务端硬编码。
-- `POST /api/message` 默认使用词霸每日金句，失败时自动回退本地短句库。
-- 确认部署位置和最终域名。
+接口会校验 JSON body、日期、生日和时区。比如 `null`、数组、字符串 JSON、非法 `timeZone` 都会返回 `400 invalid_request`，这样快捷指令端能明确知道是请求参数问题。
 
 ## License
 
