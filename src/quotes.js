@@ -1,6 +1,7 @@
 import { DEFAULT_QUOTES, selectQuote } from "./daily.js";
 
-const ICIBA_DAILY_URL = "http://open.iciba.com/dsapi/";
+const ICIBA_DAILY_URL = "https://open.iciba.com/dsapi/";
+const remoteQuoteCache = new Map();
 
 export async function getDailyQuote(options = {}) {
   const date = options.date;
@@ -22,8 +23,21 @@ export async function getDailyQuote(options = {}) {
   }
 
   try {
+    const cacheKey = date || "today";
+    if (!options.fetchImpl && remoteQuoteCache.has(cacheKey)) {
+      return {
+        quote: remoteQuoteCache.get(cacheKey),
+        quoteSource: "iciba"
+      };
+    }
+
+    const quote = await fetchIcibaQuote(options);
+    if (!options.fetchImpl) {
+      remoteQuoteCache.set(cacheKey, quote);
+    }
+
     return {
-      quote: await fetchIcibaQuote(options),
+      quote,
       quoteSource: "iciba"
     };
   } catch {

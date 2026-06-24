@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">DailyTenderAPI icon</title>
+  <desc id="desc">A sunrise, message bubble, and route line for daily shortcut messages.</desc>
+  <defs>
+    <linearGradient id="sky" x1="96" y1="72" x2="416" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff8ea"/>
+      <stop offset="0.48" stop-color="#dff4ee"/>
+      <stop offset="1" stop-color="#ffe1c4"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="192" y1="126" x2="330" y2="282" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd979"/>
+      <stop offset="1" stop-color="#ff8b5c"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#135b78"/>
+  <rect x="42" y="42" width="428" height="428" rx="88" fill="url(#sky)"/>
+  <path d="M120 317c0-86 59-157 136-157s136 71 136 157" fill="url(#sun)"/>
+  <path d="M111 319h290" fill="none" stroke="#135b78" stroke-width="28" stroke-linecap="round"/>
+  <path d="M141 373h230" fill="none" stroke="#135b78" stroke-width="24" stroke-linecap="round" opacity=".78"/>
+  <path d="M168 123l27 27m149-27-27 27m-61-63v41" fill="none" stroke="#ffb85a" stroke-width="20" stroke-linecap="round"/>
+  <path d="M158 221h118c34 0 62 28 62 62v12c0 34-28 62-62 62h-42l-55 43c-7 6-18 1-18-9v-34h-3c-34 0-62-28-62-62v-12c0-34 28-62 62-62Z" fill="#ffffff" stroke="#135b78" stroke-width="22" stroke-linejoin="round"/>
+  <path d="M174 280h86m-86 48h54" fill="none" stroke="#0f5d5a" stroke-width="18" stroke-linecap="round"/>
+  <path d="M333 254c25 0 45 20 45 45s-20 45-45 45-45-20-45-45 20-45 45-45Z" fill="#135b78"/>
+  <path d="M333 276v23l17 12" fill="none" stroke="#fff8ea" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -78,16 +78,20 @@ export function handleError(response, error, fallbackMessage) {
 }
 
 export function readJsonBody(request) {
-  if (request.body && typeof request.body === "object" && !Array.isArray(request.body)) {
-    return Promise.resolve(trimObjectKeys(request.body));
-  }
-
-  if (typeof request.body === "string") {
-    try {
-      return Promise.resolve(trimObjectKeys(JSON.parse(request.body)));
-    } catch {
-      return Promise.reject(new DailyTenderError("JSON body is invalid.", { field: "body" }));
+  if (request.body !== undefined) {
+    if (typeof request.body === "string") {
+      try {
+        return Promise.resolve(normalizeJsonObjectBody(JSON.parse(request.body)));
+      } catch (error) {
+        return Promise.reject(
+          error instanceof DailyTenderError
+            ? error
+            : new DailyTenderError("JSON body is invalid.", { field: "body" })
+        );
+      }
     }
+
+    return Promise.resolve(normalizeJsonObjectBody(request.body));
   }
 
   return new Promise((resolve, reject) => {
@@ -114,14 +118,27 @@ export function readJsonBody(request) {
       }
 
       try {
-        resolve(trimObjectKeys(JSON.parse(rawBody)));
-      } catch {
-        reject(new DailyTenderError("JSON body is invalid.", { field: "body" }));
+        resolve(normalizeJsonObjectBody(JSON.parse(rawBody)));
+      } catch (error) {
+        reject(
+          error instanceof DailyTenderError
+            ? error
+            : new DailyTenderError("JSON body is invalid.", { field: "body" })
+        );
       }
     });
 
     request.on("error", reject);
   });
+}
+
+function normalizeJsonObjectBody(value) {
+  const body = trimObjectKeys(value);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new DailyTenderError("JSON body must be an object.", { field: "body" });
+  }
+
+  return body;
 }
 
 function trimObjectKeys(value) {

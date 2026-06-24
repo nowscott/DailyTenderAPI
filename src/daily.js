@@ -60,8 +60,9 @@ export class DailyTenderError extends Error {
 }
 
 export function todayInTimeZone(timeZone = "Asia/Shanghai") {
+  const normalizedTimeZone = normalizeTimeZone(timeZone);
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
+    timeZone: normalizedTimeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit"
@@ -72,7 +73,7 @@ export function todayInTimeZone(timeZone = "Asia/Shanghai") {
 }
 
 export function buildDailyPayload(input = {}) {
-  const timeZone = input.timeZone || "Asia/Shanghai";
+  const timeZone = normalizeTimeZone(input.timeZone || "Asia/Shanghai");
   const date = normalizeDate(input.date || todayInTimeZone(timeZone), "date");
   const loveStartDate = normalizeDate(input.loveStartDate, "loveStartDate");
   const person1Birthday = normalizeMonthDay(input.person1Birthday, "person1Birthday");
@@ -173,7 +174,9 @@ export function buildMessagePayload(body = {}, options = {}) {
     location: normalizeOptionalText(body.location || body.locationText || body.address, "location"),
     weather: normalizeOptionalText(body.weather, "weather"),
     temperature: normalizeOptionalText(body.temperature, "temperature"),
-    feelsLike: normalizeOptionalText(body.feelsLike, "feelsLike"),
+    feelsLike:
+      normalizeOptionalText(body.feelsLike, "feelsLike") ||
+      normalizeOptionalText(body.temperature, "temperature"),
     rainProbability: formatRainProbability(normalizeOptionalText(body.rainProbability, "rainProbability"))
   };
   const messageOptions = {
@@ -233,10 +236,15 @@ export function extractCityFromLocationText(locationText) {
 
   const cityLine = lines.find((line) => /[\u4e00-\u9fa5A-Za-z0-9]+市(?:\s|$)/.test(line));
   if (cityLine) {
-    const match = cityLine.match(/([\u4e00-\u9fa5A-Za-z0-9]+市)(?:\s|$)/);
-    if (match) {
-      return match[1];
+    const city = extractCityFromLine(cityLine);
+    if (city) {
+      return city;
     }
+  }
+
+  const inlineCity = lines.map(extractCityFromLine).find(Boolean);
+  if (inlineCity) {
+    return inlineCity;
   }
 
   const regionLine = lines.find((line) => /[\u4e00-\u9fa5A-Za-z0-9]+(?:区|县|镇|街道)(?:\s|$)/.test(line));
@@ -404,6 +412,25 @@ function normalizeOptionalText(value, fieldName) {
   return String(value).trim() || undefined;
 }
 
+function normalizeTimeZone(value, fieldName = "timeZone") {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new DailyTenderError(`${fieldName} must be a valid IANA time zone.`, {
+      field: fieldName
+    });
+  }
+
+  const timeZone = value.trim();
+  try {
+    new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(0));
+  } catch {
+    throw new DailyTenderError(`${fieldName} must be a valid IANA time zone.`, {
+      field: fieldName
+    });
+  }
+
+  return timeZone;
+}
+
 function normalizeQuote(value, fieldName) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new DailyTenderError(`${fieldName} must be an object.`, { field: fieldName });
@@ -525,6 +552,21 @@ function formatRainProbability(value) {
   }
 
   return value.includes("%") || value.includes("％") ? value : `${value}%`;
+}
+
+function extractCityFromLine(line) {
+  const directAdminCity = line.match(/(北京市|上海市|天津市|重庆市)/);
+  if (directAdminCity) {
+    return directAdminCity[1];
+  }
+
+  const afterProvinceCity = line.match(/(?:^|省|自治区|特别行政区)([^省区县镇街道\s]+市)/);
+  if (afterProvinceCity) {
+    return afterProvinceCity[1];
+  }
+
+  const city = line.match(/([\u4e00-\u9fa5A-Za-z0-9]+?市)/);
+  return city ? city[1] : undefined;
 }
 
 function firstValue(searchParams, key) {

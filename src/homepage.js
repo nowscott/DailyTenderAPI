@@ -1,3 +1,5 @@
+import { SERVICE_VERSION } from "./version.js";
+
 export const homepageStyles = `
 :root {
   --dt-ink: #192124;
@@ -23,14 +25,18 @@ body {
 }
 
 .brand-mark {
-  width: 2.25rem;
-  height: 2.25rem;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 0.75rem;
-  background: var(--dt-teal);
-  color: #fff;
-  font-weight: 800;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 0.875rem;
+  box-shadow: 0 0.5rem 1rem rgba(19, 91, 120, 0.16);
+}
+
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .hero {
@@ -280,6 +286,9 @@ export function renderHomePage() {
       name="description"
       content="DailyTenderAPI 帮 iOS 快捷指令生成每日问候消息，包含天气、恋爱天数、生日倒计时和每日英文短句。"
     />
+    <meta name="theme-color" content="#135b78" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
@@ -288,7 +297,7 @@ export function renderHomePage() {
     <nav class="navbar navbar-expand-lg sticky-top">
       <div class="container py-2">
         <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/">
-          <span class="brand-mark">DT</span>
+          <span class="brand-mark" aria-hidden="true"><img src="/icon.svg" alt="" /></span>
           <span>DailyTenderAPI</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="切换导航">
@@ -296,8 +305,8 @@ export function renderHomePage() {
         </button>
         <div class="collapse navbar-collapse" id="topNav">
           <div class="navbar-nav ms-auto gap-lg-2">
-            <a class="nav-link" href="#tester">在线测试</a>
             <a class="nav-link" href="#shortcut">快捷指令</a>
+            <a class="nav-link" href="#tester">在线测试</a>
             <a class="nav-link" href="#reference">字段说明</a>
             <a class="nav-link" href="https://github.com/nowscott/DailyTenderAPI">GitHub</a>
           </div>
@@ -308,8 +317,8 @@ export function renderHomePage() {
     <main>
       <section class="hero">
         <div class="container py-5 py-lg-6">
-          <div class="row align-items-center g-4 g-xl-5">
-            <div class="col-lg-6">
+          <div class="row align-items-center g-4">
+            <div class="col-lg-9 col-xl-8">
               <span class="badge rounded-pill bg-teal-subtle text-teal mb-3">
                 <i class="bi bi-sunrise me-1"></i> iOS Shortcuts Message API
               </span>
@@ -347,44 +356,6 @@ export function renderHomePage() {
                 </div>
               </div>
             </div>
-
-            <div class="col-lg-6" id="tester">
-              <div class="hero-card overflow-hidden">
-                <div class="bg-dark text-white p-3 d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between">
-                  <div class="fw-bold"><i class="bi bi-circle-fill text-success small me-2"></i>Live API Tester</div>
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-light btn-sm" id="reset-sample" type="button">
-                      <i class="bi bi-arrow-counterclockwise me-1"></i>示例
-                    </button>
-                    <button class="btn btn-primary btn-sm" id="run-request" type="button">
-                      <i class="bi bi-play-fill me-1"></i>运行
-                    </button>
-                  </div>
-                </div>
-                <div class="p-3 p-md-4">
-                  <div class="row g-3">
-                    <div class="col-xl-6">
-                      <label class="form-label fw-semibold" for="request-json">请求 JSON</label>
-                      <textarea class="form-control request-editor" id="request-json" spellcheck="false"></textarea>
-                    </div>
-                    <div class="col-xl-6">
-                      <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                        <label class="form-label fw-semibold mb-0" for="message-preview">返回 message</label>
-                        <button class="btn btn-outline-secondary btn-sm" id="copy-message" type="button">
-                          <i class="bi bi-copy me-1"></i>复制
-                        </button>
-                      </div>
-                      <pre class="code-pane" id="message-preview" aria-live="polite"></pre>
-                    </div>
-                    <div class="col-12">
-                      <label class="form-label fw-semibold" for="response-output">完整响应</label>
-                      <pre class="code-pane" id="response-output" aria-live="polite"></pre>
-                      <div class="copy-status small text-secondary mt-2" id="status-line">编辑 JSON 后点击运行接口。</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -406,7 +377,53 @@ export function renderHomePage() {
         </div>
       </section>
 
-      <section class="py-5 bg-light border-top border-bottom" id="reference">
+      <section class="py-5 bg-light border-top border-bottom" id="tester">
+        <div class="container">
+          <div class="row mb-4">
+            <div class="col-lg-7">
+              <h2 class="display-6 fw-bold">在线测试</h2>
+              <p class="text-secondary mb-0">用快捷指令准备好的 JSON 直接跑一次接口，确认返回的 message 是否符合发送需求。</p>
+            </div>
+          </div>
+          <div class="hero-card overflow-hidden">
+            <div class="bg-dark text-white p-3 d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between">
+              <div class="fw-bold"><i class="bi bi-circle-fill text-success small me-2"></i>Live API Tester</div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-light btn-sm" id="reset-sample" type="button">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>示例
+                </button>
+                <button class="btn btn-primary btn-sm" id="run-request" type="button">
+                  <i class="bi bi-play-fill me-1"></i>运行
+                </button>
+              </div>
+            </div>
+            <div class="p-3 p-md-4">
+              <div class="row g-3">
+                <div class="col-xl-6">
+                  <label class="form-label fw-semibold" for="request-json">请求 JSON</label>
+                  <textarea class="form-control request-editor" id="request-json" spellcheck="false"></textarea>
+                </div>
+                <div class="col-xl-6">
+                  <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <label class="form-label fw-semibold mb-0" for="message-preview">返回 message</label>
+                    <button class="btn btn-outline-secondary btn-sm" id="copy-message" type="button">
+                      <i class="bi bi-copy me-1"></i>复制
+                    </button>
+                  </div>
+                  <pre class="code-pane" id="message-preview" aria-live="polite"></pre>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="response-output">完整响应</label>
+                  <pre class="code-pane" id="response-output" aria-live="polite"></pre>
+                  <div class="copy-status small text-secondary mt-2" id="status-line">编辑 JSON 后点击运行接口。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-5" id="reference">
         <div class="container">
           <div class="row mb-4">
             <div class="col-lg-7">
@@ -478,7 +495,7 @@ You needn't be born radiant, but you can keep shining.
 
     <footer class="border-top py-4">
       <div class="container d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between text-secondary small">
-        <span>DailyTenderAPI v0.2.2</span>
+        <span>DailyTenderAPI v${SERVICE_VERSION}</span>
         <a href="https://github.com/nowscott/DailyTenderAPI">GitHub</a>
       </div>
     </footer>

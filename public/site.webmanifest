@@ -1,0 +1,17 @@
+{
+  "name": "DailyTenderAPI",
+  "short_name": "DailyTender",
+  "description": "DailyTenderAPI provides daily greeting messages for iOS Shortcuts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffaf1",
+  "theme_color": "#135b78",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

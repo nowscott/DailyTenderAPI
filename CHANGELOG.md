@@ -2,6 +2,21 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.3] - 2026-06-24
+
+### Fixed
+
+- Return 400 responses for non-object `POST /api/message` JSON bodies instead of internal errors.
+- Return 400 responses for invalid `timeZone` values on message and daily endpoints.
+- Sync homepage, health response, and package metadata to the current release version.
+- Remove the stale version callout from the README.
+
+### Changed
+
+- Serve the Iciba quote endpoint over HTTPS and cache successful remote daily quotes in-process.
+- Use `temperature` as the message template fallback when `feelsLike` is omitted.
+- Improve city extraction for compact province-city-district location text.
+
 ## [0.2.2] - 2026-06-24
 
 ### Changed

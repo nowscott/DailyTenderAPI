@@ -1,4 +1,5 @@
 import { sendEmpty, sendJson } from "../src/http.js";
+import { SERVICE_VERSION } from "../src/version.js";
 
 export default function handler(request, response) {
   if (request.method === "OPTIONS") {
@@ -16,6 +17,7 @@ export default function handler(request, response) {
 
   sendJson(response, 200, {
     ok: true,
-    service: "DailyTenderAPI"
+    service: "DailyTenderAPI",
+    version: SERVICE_VERSION
   });
 }

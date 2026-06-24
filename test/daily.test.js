@@ -228,6 +228,40 @@ test("uses location text as city fallback for the full message", () => {
   assert.match(payload.message, /🏡城市：杭州市/);
 });
 
+test("extracts a city from compact province-city-district text", () => {
+  assert.equal(extractCityFromLocationText("中国\n浙江省杭州市西湖区文三路"), "杭州市");
+  assert.equal(extractCityFromLocationText("广东省广州市天河区体育西路"), "广州市");
+  assert.equal(extractCityFromLocationText("上海市浦东新区世纪大道"), "上海市");
+});
+
+test("uses temperature as the feels-like fallback in the final message", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      city: "杭州",
+      weather: "多云",
+      temperature: "31°C",
+      rainProbability: "40",
+      loveStart: "2026-06-20",
+      people: [
+        { name: "Person A", birthday: "06-23" },
+        { name: "Person B", birthday: "06-22" }
+      ]
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(payload.context.temperature, "31°C");
+  assert.equal(payload.context.feelsLike, "31°C");
+  assert.match(payload.message, /🫠体感温度：31°C/);
+});
+
 test("accepts shortcut-friendly flat person fields for the full message", () => {
   const payload = buildMessagePayload(
     {

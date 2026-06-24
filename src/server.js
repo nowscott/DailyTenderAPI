@@ -1,6 +1,8 @@
 import http from "node:http";
 import { handleDaily, handleMessage, sendEmpty, sendJson } from "./http.js";
+import { readFile } from "node:fs/promises";
 import { homepageScript, homepageStyles, renderHomePage } from "./homepage.js";
+import { SERVICE_VERSION } from "./version.js";
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -26,7 +28,11 @@ const server = http.createServer(async (request, response) => {
     isReadRequest(request) &&
     (requestUrl.pathname === "/health" || requestUrl.pathname === "/api/health")
   ) {
-    sendMaybeJson(request, response, 200, { ok: true, service: "DailyTenderAPI" });
+    sendMaybeJson(request, response, 200, {
+      ok: true,
+      service: "DailyTenderAPI",
+      version: SERVICE_VERSION
+    });
     return;
   }
 
@@ -45,9 +51,20 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (isReadRequest(request) && (requestUrl.pathname === "/icon.svg" || requestUrl.pathname === "/favicon.svg")) {
+    await sendStaticFile(request, response, "public/icon.svg", "image/svg+xml; charset=utf-8");
+    return;
+  }
+
+  if (isReadRequest(request) && requestUrl.pathname === "/site.webmanifest") {
+    await sendStaticFile(request, response, "public/site.webmanifest", "application/manifest+json; charset=utf-8");
+    return;
+  }
+
   if (isReadRequest(request) && requestUrl.pathname === "/api") {
     sendMaybeJson(request, response, 200, {
       service: "DailyTenderAPI",
+      version: SERVICE_VERSION,
       endpoints: ["/api/daily", "/api/message", "/api/health"]
     });
     return;
@@ -84,6 +101,19 @@ function sendMaybeText(request, response, statusCode, contentType, body) {
   response.writeHead(statusCode, {
     "content-type": contentType,
     "cache-control": "no-store"
+  });
+  if (request.method === "HEAD") {
+    response.end();
+    return;
+  }
+  response.end(body);
+}
+
+async function sendStaticFile(request, response, path, contentType) {
+  const body = await readFile(path, "utf8");
+  response.writeHead(200, {
+    "content-type": contentType,
+    "cache-control": "public, max-age=3600"
   });
   if (request.method === "HEAD") {
     response.end();
