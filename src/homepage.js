@@ -96,9 +96,17 @@ pre {
   max-width: 100%;
   border-radius: 1rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.875rem;
+  font-size: 0.875rem !important;
   line-height: 1.55;
   overflow-wrap: anywhere;
+}
+
+textarea.form-control {
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+  word-break: normal;
+  tab-size: 2;
 }
 
 textarea.form-control,
@@ -137,6 +145,7 @@ pre.code-pane {
   textarea,
   pre {
     min-height: 18rem;
+    font-size: 0.8125rem !important;
   }
 
   .hero {
@@ -423,9 +432,9 @@ export function renderHomePage() {
 🌤️天气：晴间多云
 🫠体感温度：29°C
 ☔️降雨概率：35%
-💖今天是我们恋爱的第1684天
-🦌距离小鹿生日还有349天
-🌙距离星河生日还有291天
+💖今天是我们恋爱的第1495天
+🦌距离小鹿生日还有54天
+🌙距离星河生日还有133天
 🥰今天也要记得好好吃饭哦！
 
 You needn't be born radiant, but you can keep shining.
@@ -438,7 +447,7 @@ You needn't be born radiant, but you can keep shining.
 
     <footer class="border-top py-4">
       <div class="container d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between text-secondary small">
-        <span>DailyTenderAPI v0.2.0</span>
+        <span>DailyTenderAPI v0.2.1</span>
         <a href="https://github.com/nowscott/DailyTenderAPI">GitHub</a>
       </div>
     </footer>

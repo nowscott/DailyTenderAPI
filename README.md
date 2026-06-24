@@ -4,7 +4,7 @@
 
 Production: `https://dtn.0211120.xyz`
 
-Current version: `0.2.0`
+Current version: `0.2.1`
 
 The homepage is a Bootstrap-based landing page with a live API tester: `https://dtn.0211120.xyz`
 
@@ -49,9 +49,9 @@ curl -X POST "http://localhost:3000/api/message" \
     "date": "2026-06-23",
     "week": "星期二",
     "location": "中国\n浙江省\n杭州市 西湖区\n文三路",
-    "weather": "多云",
-    "feelsLike": "32°C",
-    "rainProbability": "40%",
+    "weather": "晴间多云",
+    "feelsLike": "29°C",
+    "rainProbability": "35%",
     "loveStart": "2022-05-20",
     "greetingName": "小鹿",
     "closingText": "今天也要记得好好吃饭哦！",
@@ -67,24 +67,24 @@ curl -X POST "http://localhost:3000/api/message" \
 ```json
 {
   "date": "2026-06-23",
-  "loveDays": 1684,
-  "person1BirthdayDays": 349,
-  "person2BirthdayDays": 291,
+  "loveDays": 1495,
+  "person1BirthdayDays": 54,
+  "person2BirthdayDays": 133,
   "people": [
     {
       "key": "person1",
       "name": "小鹿",
       "birthday": "08-16",
-      "birthdayDays": 349,
-      "nextBirthday": "2027-08-16",
+      "birthdayDays": 54,
+      "nextBirthday": "2026-08-16",
       "emoji": "🦌"
     },
     {
       "key": "person2",
       "name": "星河",
       "birthday": "11-03",
-      "birthdayDays": 291,
-      "nextBirthday": "2027-11-03",
+      "birthdayDays": 133,
+      "nextBirthday": "2026-11-03",
       "emoji": "🌙"
     }
   ],
@@ -93,7 +93,7 @@ curl -X POST "http://localhost:3000/api/message" \
     "zh": "你不必天生闪耀，但可以持续发光。"
   },
   "quoteSource": "iciba",
-  "message": "🌞早安吖小鹿\n📆2026年06月23日 星期二\n🏡城市：杭州市\n🌤️天气：多云\n🫠体感温度：32°C\n☔️降雨概率：40%\n💖今天是我们恋爱的第1684天\n🦌距离小鹿生日还有349天\n🌙距离星河生日还有291天\n🥰今天也要记得好好吃饭哦！\n\nYou needn't be born radiant, but you can keep shining.\n你不必天生闪耀，但可以持续发光。"
+  "message": "🌞早安吖小鹿\n📆2026年06月23日 星期二\n🏡城市：杭州市\n🌤️天气：晴间多云\n🫠体感温度：29°C\n☔️降雨概率：35%\n💖今天是我们恋爱的第1495天\n🦌距离小鹿生日还有54天\n🌙距离星河生日还有133天\n🥰今天也要记得好好吃饭哦！\n\nYou needn't be born radiant, but you can keep shining.\n你不必天生闪耀，但可以持续发光。"
 }
 ```
 
@@ -149,7 +149,7 @@ GET /api/daily?date=2026-06-23&loveStart=2021-10-01&person1Name=Person%20A&perso
     "person1": "Person A",
     "person2": "Person B"
   },
-  "loveDays": 1684,
+  "loveDays": 1495,
   "person1BirthdayDays": 331,
   "person2BirthdayDays": 161,
   "people": [
@@ -208,7 +208,7 @@ curl "http://localhost:3000/api/daily?date=2026-06-23&loveStart=2021-10-01&perso
 ```bash
 curl -X POST "http://localhost:3000/api/message" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"晴间多云","feelsLike":"29°C","rainProbability":"35","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
 ```
 
 ## 部署到 Vercel
@@ -245,7 +245,7 @@ curl "https://你的域名/api/health"
 
 curl -X POST "https://你的域名/api/message" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"多云","feelsLike":"32°C","rainProbability":"40","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\n浙江省\n杭州市 西湖区\n文三路","weather":"晴间多云","feelsLike":"29°C","rainProbability":"35","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'
 ```
 
 ## iOS 快捷指令结构

@@ -2,6 +2,14 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.1] - 2026-06-24
+
+### Changed
+
+- Replaced homepage and README examples with fictional sample data.
+- Improved the mobile request JSON editor sizing and wrapping behavior.
+- Generalized historical changelog sample data that contained a real-looking address.
+
 ## [0.2.0] - 2026-06-24
 
 ### Added
