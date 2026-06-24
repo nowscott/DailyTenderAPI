@@ -2,6 +2,17 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.5] - 2026-06-24
+
+### Added
+
+- Added system-synced dark mode support for the landing page.
+
+### Changed
+
+- Restyled the landing page with a lighter retro paper theme and serif font stack.
+- Replaced the light-mode dark tester and code panels with warm paper-toned panels.
+
 ## [0.2.4] - 2026-06-24
 
 ### Added

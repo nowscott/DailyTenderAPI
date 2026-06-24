@@ -2,26 +2,72 @@ import { SERVICE_VERSION } from "./version.js";
 
 export const homepageStyles = `
 :root {
-  --dt-ink: #192124;
-  --dt-muted: #66777c;
-  --dt-teal: #135b78;
-  --dt-teal-dark: #0f5d5a;
-  --dt-cream: #fff8ea;
-  --dt-line: rgba(25, 33, 36, 0.12);
+  color-scheme: light dark;
+  --dt-ink: #30241e;
+  --dt-muted: #765f50;
+  --dt-accent: #6f4d2f;
+  --dt-accent-dark: #4e3725;
+  --dt-sage: #526e5a;
+  --dt-red: #9c4f42;
+  --dt-paper: #fbf1dc;
+  --dt-paper-soft: #fff8eb;
+  --dt-panel: #fff9ee;
+  --dt-panel-strong: #f6e3c1;
+  --dt-line: rgba(89, 62, 39, 0.24);
+  --dt-shadow: rgba(87, 55, 31, 0.14);
+  --dt-code-bg: #fff4df;
+  --dt-code-ink: #342820;
+  --dt-code-line: rgba(111, 77, 47, 0.34);
 }
 
 body {
   color: var(--dt-ink);
-  background: #fffaf1;
+  background:
+    linear-gradient(90deg, rgba(111, 77, 47, 0.045) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(111, 77, 47, 0.035) 1px, transparent 1px),
+    var(--dt-paper);
+  background-size: 2rem 2rem, 2rem 2rem, auto;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia,
+    "Songti SC", "Noto Serif SC", "Source Han Serif SC", SimSun, serif;
+}
+
+h1,
+h2,
+h3,
+.navbar-brand {
+  font-family:
+    Georgia, "Times New Roman", "Songti SC", "Noto Serif SC",
+    "Source Han Serif SC", SimSun, serif;
+}
+
+a {
+  color: var(--dt-sage);
+}
+
+a:hover {
+  color: var(--dt-accent);
+}
+
+body .text-secondary {
+  color: var(--dt-muted) !important;
 }
 
 .navbar {
-  backdrop-filter: blur(18px);
-  background: rgba(255, 250, 241, 0.88);
+  backdrop-filter: blur(14px);
+  background: rgba(255, 248, 235, 0.9);
+  background: color-mix(in srgb, var(--dt-paper-soft) 90%, transparent);
   border-bottom: 1px solid var(--dt-line);
+}
+
+.navbar-brand,
+.nav-link {
+  color: var(--dt-ink);
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  color: var(--dt-accent);
 }
 
 .brand-mark {
@@ -29,8 +75,8 @@ body {
   height: 2.5rem;
   display: inline-block;
   flex: 0 0 auto;
-  border-radius: 0.875rem;
-  box-shadow: 0 0.5rem 1rem rgba(19, 91, 120, 0.16);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem var(--dt-shadow);
 }
 
 .brand-mark img {
@@ -43,8 +89,8 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18% 20%, rgba(20, 123, 120, 0.2), transparent 32rem),
-    linear-gradient(135deg, #fff8ea 0%, #e9f7f3 48%, #ffe9d2 100%);
+    repeating-linear-gradient(135deg, rgba(111, 77, 47, 0.07) 0 1px, transparent 1px 12px),
+    linear-gradient(180deg, #f9ecd2 0%, #f1ddb8 100%);
   border-bottom: 1px solid var(--dt-line);
 }
 
@@ -55,34 +101,73 @@ body {
 .hero-card,
 .soft-card {
   border: 1px solid var(--dt-line);
-  border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 1.25rem 3.5rem rgba(25, 33, 36, 0.12);
+  border-radius: 0.5rem;
+  background: var(--dt-panel);
+  background: color-mix(in srgb, var(--dt-panel) 94%, transparent);
+  box-shadow: 0 1rem 2.25rem var(--dt-shadow);
 }
 
 .soft-card {
-  background: #fff;
-  box-shadow: 0 1rem 2rem rgba(25, 33, 36, 0.06);
+  background: var(--dt-panel);
+  box-shadow: 0 0.75rem 1.5rem rgba(87, 55, 31, 0.08);
 }
 
 .btn-primary {
-  --bs-btn-bg: var(--dt-teal);
-  --bs-btn-border-color: var(--dt-teal);
-  --bs-btn-hover-bg: var(--dt-teal-dark);
-  --bs-btn-hover-border-color: var(--dt-teal-dark);
-  --bs-btn-active-bg: var(--dt-teal-dark);
-  --bs-btn-active-border-color: var(--dt-teal-dark);
+  --bs-btn-bg: var(--dt-accent);
+  --bs-btn-border-color: var(--dt-accent);
+  --bs-btn-hover-bg: var(--dt-accent-dark);
+  --bs-btn-hover-border-color: var(--dt-accent-dark);
+  --bs-btn-active-bg: var(--dt-accent-dark);
+  --bs-btn-active-border-color: var(--dt-accent-dark);
+  --bs-btn-color: #fff8eb;
+  --bs-btn-hover-color: #fff8eb;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--dt-accent);
+  --bs-btn-border-color: rgba(111, 77, 47, 0.42);
+  --bs-btn-hover-bg: var(--dt-accent);
+  --bs-btn-hover-border-color: var(--dt-accent);
+  --bs-btn-hover-color: #fff8eb;
+  --bs-btn-active-bg: var(--dt-accent-dark);
+  --bs-btn-active-border-color: var(--dt-accent-dark);
+  --bs-btn-active-color: #fff8eb;
+  background: var(--dt-panel);
+  background: color-mix(in srgb, var(--dt-panel) 86%, transparent);
+}
+
+.tester-toolbar .btn-light {
+  --bs-btn-bg: var(--dt-panel);
+  --bs-btn-border-color: var(--dt-line);
+  --bs-btn-color: var(--dt-accent);
+  --bs-btn-hover-bg: var(--dt-panel-strong);
+  --bs-btn-hover-border-color: var(--dt-line);
+  --bs-btn-hover-color: var(--dt-accent-dark);
+  --bs-btn-active-bg: var(--dt-panel-strong);
+  --bs-btn-active-border-color: var(--dt-line);
+  --bs-btn-active-color: var(--dt-accent-dark);
+}
+
+.text-danger {
+  color: var(--dt-red) !important;
 }
 
 .text-teal {
-  color: var(--dt-teal-dark);
+  color: var(--dt-sage);
 }
 
 .bg-teal-subtle {
-  background: #dff4ee;
+  background: #e6ddbf;
+  border: 1px solid rgba(111, 77, 47, 0.2);
+  color: var(--dt-sage);
+  border-radius: 0.35rem;
 }
 
 .endpoint {
+  color: var(--dt-accent-dark);
+  background: var(--dt-panel) !important;
+  border-color: var(--dt-line) !important;
+  border-radius: 0.35rem !important;
   overflow-wrap: anywhere;
 }
 
@@ -91,9 +176,29 @@ body {
   height: 2.5rem;
   display: inline-grid;
   place-items: center;
-  border-radius: 0.875rem;
-  background: #dff4ee;
-  color: var(--dt-teal-dark);
+  border-radius: 0.35rem;
+  background: var(--dt-panel-strong);
+  color: var(--dt-sage);
+  border: 1px solid rgba(111, 77, 47, 0.18);
+}
+
+.tester-section {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 235, 0.62), rgba(246, 227, 193, 0.68));
+  border-top: 1px solid var(--dt-line);
+  border-bottom: 1px solid var(--dt-line);
+}
+
+.tester-toolbar {
+  color: var(--dt-ink);
+  background:
+    repeating-linear-gradient(90deg, rgba(111, 77, 47, 0.09) 0 1px, transparent 1px 10px),
+    var(--dt-panel-strong);
+  border-bottom: 1px solid var(--dt-line);
+}
+
+.tester-toolbar .text-success {
+  color: var(--dt-sage) !important;
 }
 
 .request-editor,
@@ -110,41 +215,41 @@ pre.code-pane {
 }
 
 pre.code-pane {
-  border-radius: 1rem;
+  border-radius: 0.35rem;
   overflow-wrap: anywhere;
 }
 
 .request-editor.form-control {
   width: 100%;
   padding: 1rem;
-  border-radius: 1rem;
+  border-radius: 0.35rem;
   resize: vertical;
   white-space: pre;
   overflow: auto;
   overflow-wrap: normal;
   word-break: normal;
   tab-size: 2;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 rgba(111, 77, 47, 0.08);
 }
 
 .request-editor.form-control,
 pre.code-pane {
-  background: #11181a;
-  color: #f8f4ea;
-  border-color: #263335;
+  background: var(--dt-code-bg);
+  color: var(--dt-code-ink);
+  border: 1px solid var(--dt-code-line);
 }
 
 .request-editor.form-control:focus {
-  background: #11181a;
-  color: #fffdf7;
-  border-color: #62bcb6;
+  background: var(--dt-code-bg);
+  color: var(--dt-code-ink);
+  border-color: var(--dt-sage);
   box-shadow:
-    0 0 0 0.2rem rgba(19, 91, 120, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 0.2rem rgba(82, 110, 90, 0.16),
+    inset 0 1px 0 rgba(111, 77, 47, 0.08);
 }
 
 .request-editor.form-control::selection {
-  background: rgba(98, 188, 182, 0.35);
+  background: rgba(169, 126, 73, 0.35);
 }
 
 pre.code-pane {
@@ -161,6 +266,9 @@ pre.code-pane {
 
 .table {
   table-layout: fixed;
+  --bs-table-color: var(--dt-ink);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--dt-line);
 }
 
 .table td,
@@ -168,8 +276,97 @@ pre.code-pane {
   overflow-wrap: anywhere;
 }
 
+.table > :not(caption) > * > * {
+  background-color: transparent;
+  border-color: var(--dt-line);
+}
+
+.message-preview {
+  font-family:
+    "Iowan Old Style", "Palatino Linotype", Georgia, "Songti SC",
+    "Noto Serif SC", SimSun, serif;
+}
+
 .copy-status {
   min-height: 1.5rem;
+}
+
+footer {
+  background: rgba(255, 248, 235, 0.82);
+  background: color-mix(in srgb, var(--dt-paper-soft) 82%, transparent);
+  border-color: var(--dt-line) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dt-ink: #f0dfc6;
+    --dt-muted: #c4ad91;
+    --dt-accent: #d1a35f;
+    --dt-accent-dark: #f0c980;
+    --dt-sage: #9eb58f;
+    --dt-red: #d38b78;
+    --dt-paper: #19140f;
+    --dt-paper-soft: #221a13;
+    --dt-panel: #261d15;
+    --dt-panel-strong: #302419;
+    --dt-line: rgba(229, 199, 155, 0.22);
+    --dt-shadow: rgba(0, 0, 0, 0.32);
+    --dt-code-bg: #17120d;
+    --dt-code-ink: #f4e6cf;
+    --dt-code-line: rgba(229, 199, 155, 0.24);
+  }
+
+  body {
+    background:
+      linear-gradient(90deg, rgba(229, 199, 155, 0.035) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(229, 199, 155, 0.03) 1px, transparent 1px),
+      var(--dt-paper);
+  }
+
+  .hero {
+    background:
+      repeating-linear-gradient(135deg, rgba(229, 199, 155, 0.055) 0 1px, transparent 1px 12px),
+      linear-gradient(180deg, #241b13 0%, #1b1510 100%);
+  }
+
+  .navbar {
+    background: rgba(34, 26, 19, 0.9);
+    background: color-mix(in srgb, var(--dt-paper-soft) 90%, transparent);
+  }
+
+  .bg-teal-subtle {
+    background: rgba(209, 163, 95, 0.16);
+    border-color: rgba(229, 199, 155, 0.18);
+    color: var(--dt-accent-dark);
+  }
+
+  .endpoint {
+    color: var(--dt-accent-dark);
+  }
+
+  .tester-section {
+    background:
+      linear-gradient(180deg, rgba(34, 26, 19, 0.78), rgba(30, 23, 17, 0.86));
+  }
+
+  .tester-toolbar {
+    background:
+      repeating-linear-gradient(90deg, rgba(229, 199, 155, 0.055) 0 1px, transparent 1px 10px),
+      var(--dt-panel-strong);
+  }
+
+  footer {
+    background: rgba(34, 26, 19, 0.82);
+    background: color-mix(in srgb, var(--dt-paper-soft) 82%, transparent);
+  }
+
+  .navbar-toggler {
+    border-color: var(--dt-line);
+  }
+
+  .navbar-toggler-icon {
+    filter: invert(1) sepia(0.35) saturate(0.65);
+  }
 }
 
 @media (max-width: 575.98px) {
@@ -286,7 +483,9 @@ export function renderHomePage() {
       name="description"
       content="DailyTenderAPI 帮 iOS 快捷指令生成每日问候消息，包含天气、恋爱天数、生日倒计时和每日英文短句。"
     />
-    <meta name="theme-color" content="#135b78" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#fbf1dc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#19140f" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/site.webmanifest" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -319,7 +518,7 @@ export function renderHomePage() {
         <div class="container py-5 py-lg-6">
           <div class="row align-items-center g-4">
             <div class="col-lg-9 col-xl-8">
-              <span class="badge rounded-pill bg-teal-subtle text-teal mb-3">
+              <span class="badge bg-teal-subtle text-teal mb-3">
                 <i class="bi bi-sunrise me-1"></i> iOS Shortcuts Message API
               </span>
               <h1 class="display-3 fw-bold mb-4">把每日问候消息交给一个稳定接口生成。</h1>
@@ -377,7 +576,7 @@ export function renderHomePage() {
         </div>
       </section>
 
-      <section class="py-5 bg-light border-top border-bottom" id="tester">
+      <section class="py-5 tester-section" id="tester">
         <div class="container">
           <div class="row mb-4">
             <div class="col-lg-7">
@@ -386,7 +585,7 @@ export function renderHomePage() {
             </div>
           </div>
           <div class="hero-card overflow-hidden">
-            <div class="bg-dark text-white p-3 d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between">
+            <div class="tester-toolbar p-3 d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between">
               <div class="fw-bold"><i class="bi bi-circle-fill text-success small me-2"></i>Live API Tester</div>
               <div class="d-flex gap-2">
                 <button class="btn btn-light btn-sm" id="reset-sample" type="button">
