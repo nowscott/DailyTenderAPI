@@ -2,6 +2,12 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.2] - 2026-06-24
+
+### Changed
+
+- Refined the request JSON editor styling with stable sizing, padding, focus state, and mobile wrapping.
+
 ## [0.2.1] - 2026-06-24
 
 ### Changed

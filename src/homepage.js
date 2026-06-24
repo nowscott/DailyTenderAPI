@@ -90,30 +90,55 @@ body {
   color: var(--dt-teal-dark);
 }
 
-textarea,
-pre {
-  min-height: 24rem;
+.request-editor,
+pre.code-pane {
   max-width: 100%;
-  border-radius: 1rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.875rem !important;
   line-height: 1.55;
+}
+
+.request-editor.form-control,
+pre.code-pane {
+  min-height: 24rem;
+}
+
+pre.code-pane {
+  border-radius: 1rem;
   overflow-wrap: anywhere;
 }
 
-textarea.form-control {
+.request-editor.form-control {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 1rem;
+  resize: vertical;
   white-space: pre;
   overflow: auto;
   overflow-wrap: normal;
   word-break: normal;
   tab-size: 2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-textarea.form-control,
+.request-editor.form-control,
 pre.code-pane {
   background: #11181a;
   color: #f8f4ea;
   border-color: #263335;
+}
+
+.request-editor.form-control:focus {
+  background: #11181a;
+  color: #fffdf7;
+  border-color: #62bcb6;
+  box-shadow:
+    0 0 0 0.2rem rgba(19, 91, 120, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.request-editor.form-control::selection {
+  background: rgba(98, 188, 182, 0.35);
 }
 
 pre.code-pane {
@@ -142,10 +167,16 @@ pre.code-pane {
 }
 
 @media (max-width: 575.98px) {
-  textarea,
-  pre {
+  .request-editor.form-control,
+  pre.code-pane {
     min-height: 18rem;
     font-size: 0.8125rem !important;
+  }
+
+  .request-editor.form-control {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .hero {
@@ -334,7 +365,7 @@ export function renderHomePage() {
                   <div class="row g-3">
                     <div class="col-xl-6">
                       <label class="form-label fw-semibold" for="request-json">请求 JSON</label>
-                      <textarea class="form-control" id="request-json" spellcheck="false"></textarea>
+                      <textarea class="form-control request-editor" id="request-json" spellcheck="false"></textarea>
                     </div>
                     <div class="col-xl-6">
                       <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
@@ -447,7 +478,7 @@ You needn't be born radiant, but you can keep shining.
 
     <footer class="border-top py-4">
       <div class="container d-flex flex-column flex-sm-row gap-2 align-items-sm-center justify-content-between text-secondary small">
-        <span>DailyTenderAPI v0.2.1</span>
+        <span>DailyTenderAPI v0.2.2</span>
         <a href="https://github.com/nowscott/DailyTenderAPI">GitHub</a>
       </div>
     </footer>
