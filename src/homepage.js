@@ -1,5 +1,7 @@
 import { SERVICE_VERSION } from "./version.js";
 
+const SHORTCUT_IMPORT_URL = "https://www.icloud.com/shortcuts/3626b8be64b74d0e9ed80a85d3317a0f";
+
 export const homepageStyles = `
 :root {
   color-scheme: light dark;
@@ -561,10 +563,26 @@ export function renderHomePage() {
 
       <section class="py-5" id="shortcut">
         <div class="container">
-          <div class="row mb-4">
+          <div class="row mb-4 align-items-end g-3">
             <div class="col-lg-7">
               <h2 class="display-6 fw-bold">快捷指令只需要 4 步</h2>
               <p class="text-secondary mb-0">保持手机端流程简单，所有文本拼接逻辑都放在服务端，后续调整模板不需要重做快捷指令。</p>
+            </div>
+            <div class="col-lg-5 text-lg-end">
+              <a class="btn btn-primary" href="${SHORTCUT_IMPORT_URL}" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-box-arrow-up-right me-1"></i>导入快捷指令
+              </a>
+            </div>
+          </div>
+          <div class="soft-card p-3 p-md-4 mb-3">
+            <div class="row align-items-center g-3">
+              <div class="col-md-auto">
+                <span class="step-icon"><i class="bi bi-phone"></i></span>
+              </div>
+              <div class="col">
+                <h3 class="h5 fw-bold mb-2">可以先导入模板，再按自己的信息简单编辑。</h3>
+                <p class="text-secondary mb-0">导入后主要检查接口地址、恋爱开始日、两个人生日/历法/emoji、问候称呼和发送对象；接口请求结构已经按 DailyTenderAPI 准备好。</p>
+              </div>
             </div>
           </div>
           <div class="row g-3">

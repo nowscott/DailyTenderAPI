@@ -2,6 +2,12 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.8] - 2026-06-24
+
+### Added
+
+- Added the iCloud import link for the ready-to-edit iOS Shortcut template on the homepage and README.
+
 ## [0.2.7] - 2026-06-24
 
 ### Fixed
