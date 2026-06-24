@@ -2,6 +2,15 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.0] - 2026-06-24
+
+### Added
+
+- Added a Bootstrap-based landing page at `/` for API usage guidance.
+- Added an in-page live API tester for `POST /api/message`.
+- Added copy buttons for the endpoint, generated message, and curl example.
+- Added responsive shortcut setup, field reference, and message preview sections.
+
 ## [0.1.3] - 2026-06-23
 
 ### Changed

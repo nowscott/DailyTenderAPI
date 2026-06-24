@@ -4,7 +4,9 @@
 
 Production: `https://dtn.0211120.xyz`
 
-Current version: `0.1.3`
+Current version: `0.2.0`
+
+The homepage is a Bootstrap-based landing page with a live API tester: `https://dtn.0211120.xyz`
 
 ## 命名
 
