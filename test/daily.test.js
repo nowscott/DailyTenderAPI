@@ -59,12 +59,33 @@ test("supports leap-day birthdays by jumping to the next valid leap year", () =>
   assert.equal(payload.birthdays.person2.days, 0);
 });
 
+test("supports lunar birthdays without changing solar birthday defaults", () => {
+  const payload = buildDailyPayload({
+    date: "2026-06-23",
+    loveStartDate: "2026-01-01",
+    person1Name: "Person A",
+    person2Name: "Person B",
+    person1Birthday: "08-16",
+    person1Calendar: "lunar",
+    person2Birthday: "08-16"
+  });
+
+  assert.equal(payload.birthdays.person1.calendar, "lunar");
+  assert.equal(payload.birthdays.person1.leapMonth, false);
+  assert.equal(payload.birthdays.person1.nextDate, "2026-09-26");
+  assert.equal(payload.birthdays.person1.days, 95);
+  assert.equal(payload.birthdays.person2.calendar, undefined);
+  assert.equal(payload.birthdays.person2.nextDate, "2026-08-16");
+  assert.equal(payload.birthdays.person2.days, 54);
+});
+
 test("reads input from query parameters before environment fallbacks", () => {
   const params = new URLSearchParams({
     date: "2026-06-23",
     loveStart: "2026-06-20",
     person1Name: "Query Person",
-    person1Birthday: "06-23"
+    person1Birthday: "06-23",
+    person1Calendar: "lunar"
   });
 
   const input = buildInputFromSearchParams(params, {
@@ -72,7 +93,8 @@ test("reads input from query parameters before environment fallbacks", () => {
     PERSON1_NAME: "Env Person 1",
     PERSON2_NAME: "Env Person 2",
     PERSON1_BIRTHDAY: "01-01",
-    PERSON2_BIRTHDAY: "12-31"
+    PERSON2_BIRTHDAY: "12-31",
+    PERSON2_CALENDAR: "lunar"
   });
 
   assert.equal(input.loveStartDate, "2026-06-20");
@@ -80,6 +102,8 @@ test("reads input from query parameters before environment fallbacks", () => {
   assert.equal(input.person2Name, "Env Person 2");
   assert.equal(input.person1Birthday, "06-23");
   assert.equal(input.person2Birthday, "12-31");
+  assert.equal(input.person1Calendar, "lunar");
+  assert.equal(input.person2Calendar, "lunar");
 });
 
 test("rejects missing names because names are part of the request contract", () => {
@@ -134,6 +158,32 @@ test("builds a full message from shortcut JSON input", () => {
   assert.match(payload.message, /稳定的爱让普通日子也发光。/);
 });
 
+test("renders lunar birthday messages from people calendar fields", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-09-26",
+      loveStart: "2026-01-01",
+      people: [
+        { name: "Person A", birthday: "08-16", calendar: "lunar" },
+        { name: "Person B", birthday: "09-27" }
+      ]
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(payload.people[0].calendar, "lunar");
+  assert.equal(payload.people[0].nextBirthday, "2026-09-26");
+  assert.equal(payload.person1BirthdayDays, 0);
+  assert.match(payload.message, /🦌今天是Person A生日，祝Person A生日快乐！/);
+  assert.match(payload.message, /🌙距离Person B生日还有1天/);
+});
+
 test("renders the final send-ready morning message template", () => {
   const payload = buildMessagePayload(
     {
@@ -144,7 +194,7 @@ test("renders the final send-ready morning message template", () => {
       feelsLike: "33°C",
       rainProbability: "40",
       loveStart: "2022-05-20",
-      greetingName: "小鹿",
+      to: "小鹿",
       greetingText: "早安吖",
       closingText: "今天也要记得好好吃饭哦！",
       people: [
@@ -290,6 +340,31 @@ test("accepts shortcut-friendly flat person fields for the full message", () => 
   assert.equal(payload.context.city, "杭州市");
 });
 
+test("accepts shortcut-friendly flat calendar fields for lunar birthdays", () => {
+  const payload = buildMessagePayload(
+    {
+      date: "2026-06-23",
+      loveStart: "2026-01-01",
+      person1Name: "小鹿",
+      person1Birthday: "08-16",
+      person1Calendar: "lunar",
+      person2Name: "星河",
+      person2Birthday: "11-03"
+    },
+    {
+      quote: {
+        en: "A steady love makes ordinary days bright.",
+        zh: "稳定的爱让普通日子也发光。"
+      },
+      quoteSource: "test"
+    }
+  );
+
+  assert.equal(payload.people[0].calendar, "lunar");
+  assert.equal(payload.people[0].nextBirthday, "2026-09-26");
+  assert.equal(payload.person1BirthdayDays, 95);
+});
+
 test("accepts keyed person dictionaries for the full message", () => {
   const payload = buildMessagePayload(
     {
@@ -310,4 +385,34 @@ test("accepts keyed person dictionaries for the full message", () => {
   );
 
   assert.deepEqual(payload.people.map((person) => person.name), ["小鹿", "星河"]);
+});
+
+test("rejects invalid lunar birthday month-days", () => {
+  assert.throws(
+    () =>
+      buildMessagePayload({
+        date: "2026-06-23",
+        loveStart: "2026-01-01",
+        people: [
+          { name: "Person A", birthday: "02-31", calendar: "lunar" },
+          { name: "Person B", birthday: "11-03" }
+        ]
+      }),
+    DailyTenderError
+  );
+});
+
+test("rejects explicit solar calendar values because solar is the default", () => {
+  assert.throws(
+    () =>
+      buildMessagePayload({
+        date: "2026-06-23",
+        loveStart: "2026-01-01",
+        people: [
+          { name: "Person A", birthday: "08-16", calendar: "solar" },
+          { name: "Person B", birthday: "11-03" }
+        ]
+      }),
+    DailyTenderError
+  );
 });

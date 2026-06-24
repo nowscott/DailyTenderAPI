@@ -2,6 +2,18 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.6] - 2026-06-24
+
+### Added
+
+- Added lunar birthday countdown support for `POST /api/message` and `GET /api/daily`.
+- Added short birthday calendar fields: `calendar: "lunar"` for `people` entries and `person1Calendar` / `person2Calendar` for flat inputs.
+
+### Changed
+
+- Replaced the public `greetingName` request field with the shorter `to` field.
+- Updated README and homepage examples to show one solar birthday and one lunar birthday.
+
 ## [0.2.5] - 2026-06-24
 
 ### Added

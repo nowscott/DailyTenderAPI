@@ -397,11 +397,11 @@ const samplePayload = {
   feelsLike: "29°C",
   rainProbability: "35",
   loveStart: "2022-05-20",
-  greetingName: "小鹿",
+  to: "小鹿",
   closingText: "今天也要记得好好吃饭哦！",
   people: [
     { name: "小鹿", birthday: "08-16", emoji: "🦌" },
-    { name: "星河", birthday: "11-03", emoji: "🌙" }
+    { name: "星河", birthday: "08-16", calendar: "lunar", emoji: "🌙" }
   ]
 };
 
@@ -523,7 +523,7 @@ export function renderHomePage() {
               </span>
               <h1 class="display-3 fw-bold mb-4">把每日问候消息交给一个稳定接口生成。</h1>
               <p class="lead text-secondary mb-4">
-                快捷指令只负责采集日期、天气和位置；DailyTenderAPI 负责计算恋爱天数、生日倒计时、每日短句，并返回可直接发送的 message。
+                快捷指令只负责采集日期、天气和位置；DailyTenderAPI 负责计算恋爱天数、阳历/农历生日倒计时、每日短句，并返回可直接发送的 message。
               </p>
               <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch align-items-sm-center mb-4">
                 <code class="endpoint bg-white border rounded-3 px-3 py-2" id="endpoint-text">https://dtn.0211120.xyz/api/message</code>
@@ -543,7 +543,7 @@ export function renderHomePage() {
                   <div class="soft-card h-100 p-3">
                     <span class="step-icon mb-3"><i class="bi bi-gear"></i></span>
                     <h2 class="h6 fw-bold">接口计算</h2>
-                    <p class="small text-secondary mb-0">城市解析、恋爱天数、生日倒计时和每日短句。</p>
+                    <p class="small text-secondary mb-0">城市解析、恋爱天数、阳历/农历生日倒计时和每日短句。</p>
                   </div>
                 </div>
                 <div class="col-sm-4">
@@ -645,8 +645,9 @@ export function renderHomePage() {
                       <tr><td><code>date</code></td><td>yyyy-MM-dd 日期，缺省时按 Asia/Shanghai 的今天计算。</td></tr>
                       <tr><td><code>location</code></td><td>快捷指令位置转文本的原始内容，服务端会提取城市。</td></tr>
                       <tr><td><code>loveStart</code></td><td>恋爱开始日期，默认按日期差计算第几天。</td></tr>
+                      <tr><td><code>people[].calendar</code></td><td>农历生日传 lunar；不传就是公历。</td></tr>
                       <tr><td><code>people[].emoji</code></td><td>每个人生日倒计时行前面的 emoji。</td></tr>
-                      <tr><td><code>greetingName</code></td><td>第一行问候称呼，例如 小鹿。</td></tr>
+                      <tr><td><code>to</code></td><td>第一行问候称呼，例如 小鹿。</td></tr>
                       <tr><td><code>closingText</code></td><td>每日提醒文案，例如 今天也要记得好好吃饭哦！</td></tr>
                     </tbody>
                   </table>
@@ -656,7 +657,7 @@ export function renderHomePage() {
             <div class="col-lg-6">
               <pre class="code-pane h-100" id="curl-example">curl -X POST "https://dtn.0211120.xyz/api/message" \\
   -H "content-type: application/json" \\
-  -d '{"date":"2026-06-23","week":"星期二","location":"中国\\n浙江省\\n杭州市 西湖区\\n文三路","weather":"晴间多云","feelsLike":"29°C","rainProbability":"35","loveStart":"2022-05-20","greetingName":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"11-03","emoji":"🌙"}]}'</pre>
+  -d '{"date":"2026-06-23","week":"星期二","location":"中国\\n浙江省\\n杭州市 西湖区\\n文三路","weather":"晴间多云","feelsLike":"29°C","rainProbability":"35","loveStart":"2022-05-20","to":"小鹿","closingText":"今天也要记得好好吃饭哦！","people":[{"name":"小鹿","birthday":"08-16","emoji":"🦌"},{"name":"星河","birthday":"08-16","calendar":"lunar","emoji":"🌙"}]}'</pre>
               <button class="btn btn-outline-secondary w-100 mt-3" id="copy-curl" type="button">
                 <i class="bi bi-copy me-1"></i>复制 curl
               </button>
@@ -681,7 +682,7 @@ export function renderHomePage() {
 ☔️降雨概率：35%
 💖今天是我们恋爱的第1495天
 🦌距离小鹿生日还有54天
-🌙距离星河生日还有133天
+🌙距离星河生日还有95天
 🥰今天也要记得好好吃饭哦！
 
 You needn't be born radiant, but you can keep shining.

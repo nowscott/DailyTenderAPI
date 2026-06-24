@@ -1,4 +1,7 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
+const LUNAR_BIRTHDAY_SCAN_DAYS = 10 * 390;
+
+let chineseCalendarFormatter;
 
 export const DEFAULT_QUOTES = [
   {
@@ -76,8 +79,18 @@ export function buildDailyPayload(input = {}) {
   const timeZone = normalizeTimeZone(input.timeZone || "Asia/Shanghai");
   const date = normalizeDate(input.date || todayInTimeZone(timeZone), "date");
   const loveStartDate = normalizeDate(input.loveStartDate, "loveStartDate");
-  const person1Birthday = normalizeMonthDay(input.person1Birthday, "person1Birthday");
-  const person2Birthday = normalizeMonthDay(input.person2Birthday, "person2Birthday");
+  const person1Birthday = normalizeBirthday(
+    input.person1Birthday,
+    "person1Birthday",
+    input.person1Calendar,
+    input.person1LeapMonth
+  );
+  const person2Birthday = normalizeBirthday(
+    input.person2Birthday,
+    "person2Birthday",
+    input.person2Calendar,
+    input.person2LeapMonth
+  );
   const person1Name = normalizeName(input.person1Name, "person1Name");
   const person2Name = normalizeName(input.person2Name, "person2Name");
   const quoteMode = input.quoteMode || "daily";
@@ -109,13 +122,15 @@ export function buildDailyPayload(input = {}) {
     birthdays: {
       person1: {
         name: person1Name,
-        monthDay: person1Birthday,
+        monthDay: person1Birthday.monthDay,
+        ...birthdayCalendarFields(person1Birthday),
         days: person1BirthdayInfo.days,
         nextDate: person1BirthdayInfo.nextDate
       },
       person2: {
         name: person2Name,
-        monthDay: person2Birthday,
+        monthDay: person2Birthday.monthDay,
+        ...birthdayCalendarFields(person2Birthday),
         days: person2BirthdayInfo.days,
         nextDate: person2BirthdayInfo.nextDate
       }
@@ -124,14 +139,16 @@ export function buildDailyPayload(input = {}) {
       {
         key: "person1",
         name: person1Name,
-        birthday: person1Birthday,
+        birthday: person1Birthday.monthDay,
+        ...birthdayCalendarFields(person1Birthday),
         birthdayDays: person1BirthdayInfo.days,
         nextBirthday: person1BirthdayInfo.nextDate
       },
       {
         key: "person2",
         name: person2Name,
-        birthday: person2Birthday,
+        birthday: person2Birthday.monthDay,
+        ...birthdayCalendarFields(person2Birthday),
         birthdayDays: person2BirthdayInfo.days,
         nextBirthday: person2BirthdayInfo.nextDate
       }
@@ -155,6 +172,10 @@ export function buildMessagePayload(body = {}, options = {}) {
     person2Name: people[1].name,
     person1Birthday: people[0].birthday,
     person2Birthday: people[1].birthday,
+    person1Calendar: people[0].calendar,
+    person2Calendar: people[1].calendar,
+    person1LeapMonth: people[0].leapMonth,
+    person2LeapMonth: people[1].leapMonth,
     quoteMode: body.quoteMode,
     loveCountRule: body.loveCountRule,
     quote: options.quote || body.quote,
@@ -181,7 +202,7 @@ export function buildMessagePayload(body = {}, options = {}) {
   };
   const messageOptions = {
     greetingText: normalizeOptionalText(body.greetingText, "greetingText") || "早安吖",
-    greetingName: normalizeOptionalText(body.greetingName, "greetingName") || decoratedPeople[0].name,
+    to: normalizeOptionalText(body.to, "to") || decoratedPeople[0].name,
     closingText: normalizeOptionalText(body.closingText, "closingText") || "今天也要记得好好吃饭哦！",
     emojis: normalizeEmojis(body.emojis)
   };
@@ -210,11 +231,15 @@ function resolvePeopleInput(body) {
       {
         name: body.person1Name,
         birthday: body.person1Birthday,
+        calendar: body.person1Calendar,
+        leapMonth: body.person1LeapMonth,
         emoji: body.person1Emoji
       },
       {
         name: body.person2Name,
         birthday: body.person2Birthday,
+        calendar: body.person2Calendar,
+        leapMonth: body.person2LeapMonth,
         emoji: body.person2Emoji
       }
     ];
@@ -267,6 +292,10 @@ export function buildInputFromSearchParams(searchParams, env = process.env) {
     person2Name: firstValue(searchParams, "person2Name") || env.PERSON2_NAME,
     person1Birthday: firstValue(searchParams, "person1Birthday") || env.PERSON1_BIRTHDAY,
     person2Birthday: firstValue(searchParams, "person2Birthday") || env.PERSON2_BIRTHDAY,
+    person1Calendar: firstValue(searchParams, "person1Calendar") || env.PERSON1_CALENDAR,
+    person2Calendar: firstValue(searchParams, "person2Calendar") || env.PERSON2_CALENDAR,
+    person1LeapMonth: firstValue(searchParams, "person1LeapMonth") || env.PERSON1_LEAP_MONTH,
+    person2LeapMonth: firstValue(searchParams, "person2LeapMonth") || env.PERSON2_LEAP_MONTH,
     quoteMode: firstValue(searchParams, "quoteMode") || env.QUOTE_MODE || "daily"
   };
 }
@@ -299,7 +328,7 @@ export function selectQuote(date, quoteMode, quotes) {
 function renderMessage(daily, context, options) {
   const emojis = options.emojis;
   const lines = [
-    `${emojis.greeting}${options.greetingText}${options.greetingName}`,
+    `${emojis.greeting}${options.greetingText}${options.to}`,
     `${emojis.date}${context.displayDate}${context.week ? ` ${context.week}` : ""}`,
     `${emojis.city}城市：${context.city || ""}`,
     `${emojis.weather}天气：${context.weather || ""}`,
@@ -361,9 +390,17 @@ function normalizePerson(person, fieldPrefix) {
     throw new DailyTenderError(`${fieldPrefix} must be an object.`, { field: fieldPrefix });
   }
 
+  const birthday = normalizeBirthday(
+    person.birthday,
+    `${fieldPrefix}.birthday`,
+    person.calendar,
+    person.leapMonth
+  );
+
   return {
     name: normalizeName(person.name, `${fieldPrefix}.name`),
-    birthday: normalizeMonthDay(person.birthday, `${fieldPrefix}.birthday`),
+    birthday: birthday.monthDay,
+    ...birthdayCalendarFields(birthday),
     emoji: normalizeOptionalText(person.emoji, `${fieldPrefix}.emoji`)
   };
 }
@@ -459,6 +496,87 @@ function normalizeDate(value, fieldName) {
   return value;
 }
 
+function normalizeBirthday(value, fieldName, calendarHint, leapMonthHint) {
+  let birthdayValue = value;
+  let calendarValue = calendarHint;
+  let leapMonthValue = leapMonthHint;
+
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    birthdayValue = value.monthDay ?? value.date ?? value.value;
+    calendarValue = value.calendar ?? value.type ?? calendarHint;
+    leapMonthValue = value.leapMonth ?? leapMonthHint;
+  }
+
+  const calendar = normalizeBirthdayCalendar(calendarValue, `${fieldName}.calendar`);
+  const leapMonth = normalizeBirthdayLeapMonth(leapMonthValue, `${fieldName}.leapMonth`);
+  if (leapMonth && calendar !== "lunar") {
+    throw new DailyTenderError(`${fieldName}.leapMonth only applies to lunar birthdays.`, {
+      field: `${fieldName}.leapMonth`
+    });
+  }
+
+  const monthDay =
+    calendar === "lunar"
+      ? normalizeLunarMonthDay(birthdayValue, fieldName)
+      : normalizeMonthDay(birthdayValue, fieldName);
+
+  return {
+    monthDay,
+    calendar,
+    leapMonth: calendar === "lunar" ? leapMonth : false
+  };
+}
+
+function birthdayCalendarFields(birthday) {
+  if (birthday.calendar !== "lunar") {
+    return {};
+  }
+
+  return {
+    calendar: "lunar",
+    leapMonth: birthday.leapMonth
+  };
+}
+
+function normalizeBirthdayCalendar(value, fieldName) {
+  if (value === undefined || value === null || value === "") {
+    return "solar";
+  }
+
+  if (typeof value !== "string") {
+    throw new DailyTenderError(`${fieldName} must be lunar when provided.`, { field: fieldName });
+  }
+
+  const calendar = value.trim().toLowerCase();
+  if (["lunar", "农历", "阴历"].includes(calendar)) {
+    return "lunar";
+  }
+
+  throw new DailyTenderError(`${fieldName} must be lunar when provided.`, { field: fieldName });
+}
+
+function normalizeBirthdayLeapMonth(value, fieldName) {
+  if (value === undefined || value === null || value === "") {
+    return false;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "no"].includes(normalized)) {
+      return false;
+    }
+  }
+
+  throw new DailyTenderError(`${fieldName} must be a boolean.`, { field: fieldName });
+}
+
 function normalizeMonthDay(value, fieldName) {
   if (typeof value !== "string" || !/^\d{2}-\d{2}$/.test(value)) {
     throw new DailyTenderError(`${fieldName} must use MM-DD.`, { field: fieldName });
@@ -467,6 +585,21 @@ function normalizeMonthDay(value, fieldName) {
   const [month, day] = value.split("-").map(Number);
   if (!isValidMonthDay(2024, month, day)) {
     throw new DailyTenderError(`${fieldName} is not a valid month-day value.`, {
+      field: fieldName
+    });
+  }
+
+  return value;
+}
+
+function normalizeLunarMonthDay(value, fieldName) {
+  if (typeof value !== "string" || !/^\d{2}-\d{2}$/.test(value)) {
+    throw new DailyTenderError(`${fieldName} must use MM-DD.`, { field: fieldName });
+  }
+
+  const [month, day] = value.split("-").map(Number);
+  if (month < 1 || month > 12 || day < 1 || day > 30) {
+    throw new DailyTenderError(`${fieldName} is not a valid lunar month-day value.`, {
       field: fieldName
     });
   }
@@ -495,7 +628,15 @@ function countLoveDays(startDate, endDate, countRule) {
   });
 }
 
-function nextBirthdayInfo(currentDate, monthDay) {
+function nextBirthdayInfo(currentDate, birthday) {
+  if (birthday.calendar === "lunar") {
+    return nextLunarBirthdayInfo(currentDate, birthday);
+  }
+
+  return nextSolarBirthdayInfo(currentDate, birthday.monthDay);
+}
+
+function nextSolarBirthdayInfo(currentDate, monthDay) {
   const [currentYear] = currentDate.split("-").map(Number);
   const [month, day] = monthDay.split("-").map(Number);
   let nextYear = currentYear;
@@ -519,6 +660,28 @@ function nextBirthdayInfo(currentDate, monthDay) {
   };
 }
 
+function nextLunarBirthdayInfo(currentDate, birthday) {
+  const [targetMonth, targetDay] = birthday.monthDay.split("-").map(Number);
+  for (let offset = 0; offset <= LUNAR_BIRTHDAY_SCAN_DAYS; offset += 1) {
+    const nextDate = addDays(currentDate, offset);
+    const lunar = getLunarMonthDay(nextDate);
+    if (
+      lunar.month === targetMonth &&
+      lunar.day === targetDay &&
+      lunar.leapMonth === birthday.leapMonth
+    ) {
+      return {
+        days: offset,
+        nextDate
+      };
+    }
+  }
+
+  throw new DailyTenderError("Could not find the next lunar birthday in the supported range.", {
+    field: "birthday"
+  });
+}
+
 function daysBetween(startDate, endDate) {
   return Math.round((dateToUtcMs(endDate) - dateToUtcMs(startDate)) / DAY_MS);
 }
@@ -539,6 +702,52 @@ function isValidMonthDay(year, month, day) {
 
 function formatDate(year, month, day) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function addDays(dateString, days) {
+  const date = new Date(dateToUtcMs(dateString) + days * DAY_MS);
+  return formatDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+}
+
+function getLunarMonthDay(dateString) {
+  const parts = getChineseCalendarFormatter().formatToParts(new Date(dateToUtcMs(dateString)));
+  const monthPart = parts.find((part) => part.type === "month");
+  const dayPart = parts.find((part) => part.type === "day");
+  const rawMonth = monthPart?.value;
+  const rawDay = dayPart?.value;
+  const leapMonth = rawMonth?.endsWith("bis") || false;
+  const month = Number(rawMonth?.replace("bis", ""));
+  const day = Number(rawDay);
+
+  if (!Number.isInteger(month) || !Number.isInteger(day)) {
+    throw new DailyTenderError("Lunar birthday calculation is not available in this runtime.", {
+      field: "birthday"
+    });
+  }
+
+  return {
+    month,
+    day,
+    leapMonth
+  };
+}
+
+function getChineseCalendarFormatter() {
+  if (!chineseCalendarFormatter) {
+    try {
+      chineseCalendarFormatter = new Intl.DateTimeFormat("en-US-u-ca-chinese", {
+        timeZone: "UTC",
+        month: "numeric",
+        day: "numeric"
+      });
+    } catch {
+      throw new DailyTenderError("Lunar birthday calculation is not available in this runtime.", {
+        field: "birthday"
+      });
+    }
+  }
+
+  return chineseCalendarFormatter;
 }
 
 function formatChineseDate(dateString) {
