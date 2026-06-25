@@ -78,7 +78,7 @@ curl -X POST "http://localhost:3000/api/message" \
 
 也可以先导入模板快捷指令，再按自己的信息简单编辑：
 
-- 导入链接：`https://www.icloud.com/shortcuts/bb10a9068ae04ef5a20d096d95c65c50`
+- 导入链接：`https://www.icloud.com/shortcuts/622d4001eab1474dbb01722be82035cf`
 - 导入后主要检查接口地址、恋爱开始日、两个人生日/历法/emoji、问候称呼和发送对象。
 
 ### 1. 采集日期、天气和位置
