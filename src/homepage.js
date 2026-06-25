@@ -1,6 +1,6 @@
 import { SERVICE_VERSION } from "./version.js";
 
-const SHORTCUT_IMPORT_URL = "https://www.icloud.com/shortcuts/3626b8be64b74d0e9ed80a85d3317a0f";
+const SHORTCUT_IMPORT_URL = "https://www.icloud.com/shortcuts/bb10a9068ae04ef5a20d096d95c65c50";
 
 export const homepageStyles = `
 :root {

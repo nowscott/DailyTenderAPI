@@ -2,6 +2,12 @@
 
 All notable changes to DailyTenderAPI are documented in this file.
 
+## [0.2.9] - 2026-06-25
+
+### Changed
+
+- Updated the published iOS Shortcut import link on the homepage and README.
+
 ## [0.2.8] - 2026-06-24
 
 ### Added
