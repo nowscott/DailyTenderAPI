@@ -61,5 +61,12 @@
     "source": "iciba",
     "sid": "6004",
     "fetchedAt": "2026-07-01T18:21:59.375Z"
+  },
+  "2026-07-03": {
+    "en": "Light bulbs are like fruits that light up the night.",
+    "zh": "灯泡像黑夜里结出的果实。",
+    "source": "iciba",
+    "sid": "6005",
+    "fetchedAt": "2026-07-02T18:10:49.960Z"
   }
 }
