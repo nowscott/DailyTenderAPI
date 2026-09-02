@@ -488,5 +488,12 @@
     "source": "iciba",
     "sid": "6066",
     "fetchedAt": "2026-09-01T19:27:17.454Z"
+  },
+  "2026-09-03": {
+    "en": "The woods are lovely, dark and deep.",
+    "zh": "树林可爱，又暗又深。",
+    "source": "iciba",
+    "sid": "6067",
+    "fetchedAt": "2026-09-02T19:25:57.358Z"
   }
 }
