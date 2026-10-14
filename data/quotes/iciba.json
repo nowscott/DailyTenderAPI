@@ -782,5 +782,12 @@
     "source": "iciba",
     "sid": "6108",
     "fetchedAt": "2026-10-13T21:23:02.386Z"
+  },
+  "2026-10-15": {
+    "en": "Choose the harder right instead of the easier wrong.",
+    "zh": "选择更难的正确，而非更容易的错误。",
+    "source": "iciba",
+    "sid": "6109",
+    "fetchedAt": "2026-10-14T20:15:38.948Z"
   }
 }
