@@ -5,13 +5,17 @@ import { getDailyQuote } from "../src/quotes.js";
 test("uses Iciba content and note when the remote request succeeds", async () => {
   const result = await getDailyQuote({
     date: "2026-06-23",
-    fetchImpl: async () => ({
+    fetchImpl: async (url) => {
+      assert.equal(url.searchParams.get("title"), "2026-06-23");
+      return {
       ok: true,
       json: async () => ({
+        title: "2026-06-23",
         content: "Remote English quote.",
         note: "远程中文短句。"
       })
-    })
+      };
+    }
   });
 
   assert.deepEqual(result, {
@@ -21,6 +25,17 @@ test("uses Iciba content and note when the remote request succeeds", async () =>
     },
     quoteSource: "iciba"
   });
+});
+
+test("falls back when Iciba returns a different date", async () => {
+  const result = await getDailyQuote({
+    date: "2026-06-23",
+    fetchImpl: async () => ({
+      ok: true,
+      json: async () => ({ title: "2026-06-22", content: "English", note: "中文" })
+    })
+  });
+  assert.equal(result.quoteSource, "local-fallback");
 });
 
 test("uses the archived Iciba quote before making a remote request", async () => {

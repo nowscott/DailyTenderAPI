@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ICIBA_DAILY_URL = "https://open.iciba.com/dsapi/";
+const ICIBA_DAILY_URL = "https://sentence.iciba.com/index.php?c=dailysentence&m=getdetail";
 const TIME_ZONE = "Asia/Shanghai";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -12,7 +12,7 @@ const quoteFile = resolve(repoRoot, "data/quotes/iciba.json");
 const targetDate = process.env.QUOTE_DATE || todayInTimeZone(TIME_ZONE);
 const fetchedAt = new Date().toISOString();
 const url = new URL(ICIBA_DAILY_URL);
-url.searchParams.set("date", targetDate);
+url.searchParams.set("title", targetDate);
 
 const response = await fetch(url, {
   headers: {
@@ -29,8 +29,8 @@ if (!data || typeof data.content !== "string" || typeof data.note !== "string") 
   throw new Error("Iciba quote response is missing content or note.");
 }
 
-if (data.dateline !== targetDate) {
-  throw new Error(`Iciba quote dateline ${data.dateline || "(missing)"} does not match ${targetDate}.`);
+if (data.title !== targetDate) {
+  throw new Error(`Iciba quote date ${data.title || "(missing)"} does not match ${targetDate}.`);
 }
 
 const quotes = await readQuotes();
