@@ -1,7 +1,33 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
+import { readFile } from "node:fs/promises";
 import { handleDaily, handleMessage } from "../src/http.js";
+
+test("message route renders a historical quote when Iciba is unavailable", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error("network failed"); };
+  try {
+    const response = await runMessageRoute(JSON.stringify({
+      date: "2026-11-03",
+      loveStart: "2022-05-20",
+      people: [
+        { name: "Person A", birthday: "08-16" },
+        { name: "Person B", birthday: "11-03" }
+      ]
+    }));
+    const payload = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(payload.quoteSource, "local-fallback");
+    const archive = JSON.parse(await readFile(new URL("../data/quotes/iciba.json", import.meta.url)));
+    assert.ok(Object.values(archive).some((quote) => quote.en === payload.quote.en && quote.zh === payload.quote.zh));
+    assert.ok(payload.message.includes(payload.quote.en));
+    assert.ok(payload.message.includes(payload.quote.zh));
+    assert.ok(!payload.message.includes("历史"));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test("message route rejects JSON null with a 400 response", async () => {
   const response = await runMessageRoute("null");
