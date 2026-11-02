@@ -1,7 +1,7 @@
 import { DEFAULT_QUOTES, selectQuote } from "./daily.js";
 import { readFile } from "node:fs/promises";
 
-const ICIBA_DAILY_URL = "https://open.iciba.com/dsapi/";
+const ICIBA_DAILY_URL = "https://sentence.iciba.com/index.php?c=dailysentence&m=getdetail";
 const ICIBA_ARCHIVE_URL = new URL("../data/quotes/iciba.json", import.meta.url);
 const remoteQuoteCache = new Map();
 let quoteArchivePromise;
@@ -96,7 +96,9 @@ async function fetchIcibaQuote(options = {}) {
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetchImpl(ICIBA_DAILY_URL, {
+    const url = new URL(ICIBA_DAILY_URL);
+    if (options.date) url.searchParams.set("title", options.date);
+    const response = await fetchImpl(url, {
       headers: {
         "content-type": "application/json",
         "user-agent":
@@ -112,6 +114,9 @@ async function fetchIcibaQuote(options = {}) {
     const data = await response.json();
     if (!data || typeof data.content !== "string" || typeof data.note !== "string") {
       throw new Error("Iciba quote response is missing content or note.");
+    }
+    if (options.date && data.title !== options.date) {
+      throw new Error(`Iciba quote date ${data.title || "(missing)"} does not match ${options.date}.`);
     }
 
     return {
