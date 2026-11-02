@@ -25,15 +25,22 @@ export async function getDailyQuote(options = {}) {
     };
   }
 
+  let archive;
   try {
-    const archivedQuote = await getArchivedQuote(date, options);
-    if (archivedQuote) {
-      return {
-        quote: archivedQuote,
-        quoteSource: "iciba-cache"
-      };
-    }
+    archive = options.quoteArchive || (await loadQuoteArchive());
+  } catch {
+    archive = {};
+  }
 
+  const archivedQuote = archive[date];
+  if (archivedQuote && typeof archivedQuote.en === "string" && typeof archivedQuote.zh === "string") {
+    return {
+      quote: { en: archivedQuote.en.trim(), zh: archivedQuote.zh.trim() },
+      quoteSource: "iciba-cache"
+    };
+  }
+
+  try {
     const cacheKey = date || "today";
     if (!options.fetchImpl && remoteQuoteCache.has(cacheKey)) {
       return {
@@ -52,28 +59,17 @@ export async function getDailyQuote(options = {}) {
       quoteSource: "iciba"
     };
   } catch {
+    const historicalQuotes = Object.entries(archive)
+      .filter(([archiveDate, quote]) => archiveDate < date && quote &&
+        typeof quote.en === "string" && quote.en.trim() &&
+        typeof quote.zh === "string" && quote.zh.trim())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([, quote]) => quote);
     return {
-      quote: selectQuote(date, quoteMode, DEFAULT_QUOTES),
+      quote: selectQuote(date, quoteMode, historicalQuotes.length ? historicalQuotes : DEFAULT_QUOTES),
       quoteSource: "local-fallback"
     };
   }
-}
-
-async function getArchivedQuote(date, options = {}) {
-  if (!date || options.fetchImpl) {
-    return undefined;
-  }
-
-  const archive = options.quoteArchive || (await loadQuoteArchive());
-  const quote = archive[date];
-  if (!quote || typeof quote.en !== "string" || typeof quote.zh !== "string") {
-    return undefined;
-  }
-
-  return {
-    en: quote.en.trim(),
-    zh: quote.zh.trim()
-  };
 }
 
 async function loadQuoteArchive() {

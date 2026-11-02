@@ -192,7 +192,7 @@ curl -X POST "http://localhost:3000/api/message" \
 | `person1LeapMonth` / `person2LeapMonth` | 否 | 布尔 | 扁平字段模式下的农历闰月标记。 |
 | `person1Emoji` / `person2Emoji` | 否 | 文本 | 扁平字段模式下的 emoji。 |
 | `quote` | 否 | 对象 | 传 `{ "en": "...", "zh": "..." }` 可覆盖每日一句。 |
-| `quoteSource` | 否 | `iciba` / `local` | 默认 `iciba`，失败时自动回退本地短句。 |
+| `quoteSource` | 否 | `iciba` / `local` | 默认 `iciba`，失败时自动回退历史留存或本地短句。 |
 | `timeZone` | 否 | IANA 时区 | 默认 `Asia/Shanghai`。 |
 
 #### 返回字段
@@ -294,7 +294,7 @@ curl -I "https://dtn.0211120.xyz/site.webmanifest"
 data/quotes/iciba.json
 ```
 
-接口生成消息时会先按 `date` 查这个文件。命中时返回 `quoteSource: "iciba-cache"`；没有命中才请求词霸远程接口；远程不可用时再回退到本地短句库。
+接口生成消息时会先按 `date` 查这个文件。命中时返回 `quoteSource: "iciba-cache"`；没有命中才请求词霸远程接口。远程不可用时，从该日期之前的留存中选取短句；如果没有可用的历史留存，再回退到本地短句库。这两种兜底均返回原有的 `quoteSource: "local-fallback"`，不会在消息中添加提示。
 
 手动补某一天的数据：
 
@@ -319,7 +319,7 @@ QUOTE_DATE=2026-06-24 node scripts/fetch-iciba-quote.mjs
 
 ### 为什么 `quoteSource` 是 `local-fallback`？
 
-默认每日一句优先使用 `data/quotes/iciba.json` 里的日期留存，然后才请求词霸日期查询接口。如果留存没有命中、远程接口当次也不可用，服务会自动回退到本地短句库。
+默认每日一句优先使用 `data/quotes/iciba.json` 里的日期留存，然后才请求词霸日期查询接口。如果留存没有命中、远程接口当次也不可用，服务会自动使用历史留存；没有可用的历史留存时使用本地短句库。
 
 ### 为什么非法请求返回 400？
 
