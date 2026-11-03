@@ -5,11 +5,15 @@ import { readFile } from "node:fs/promises";
 import { handleDaily, handleMessage } from "../src/http.js";
 
 test("message route renders a historical quote when Iciba is unavailable", async () => {
+  const archive = JSON.parse(await readFile(new URL("../data/quotes/iciba.json", import.meta.url)));
+  const latestDate = Object.keys(archive).sort().at(-1);
+  const nextDate = new Date(`${latestDate}T00:00:00Z`);
+  nextDate.setUTCDate(nextDate.getUTCDate() + 1);
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => { throw new Error("network failed"); };
   try {
     const response = await runMessageRoute(JSON.stringify({
-      date: "2026-11-03",
+      date: nextDate.toISOString().slice(0, 10),
       loveStart: "2022-05-20",
       people: [
         { name: "Person A", birthday: "08-16" },
@@ -19,7 +23,6 @@ test("message route renders a historical quote when Iciba is unavailable", async
     const payload = JSON.parse(response.body);
     assert.equal(response.statusCode, 200);
     assert.equal(payload.quoteSource, "local-fallback");
-    const archive = JSON.parse(await readFile(new URL("../data/quotes/iciba.json", import.meta.url)));
     assert.ok(Object.values(archive).some((quote) => quote.en === payload.quote.en && quote.zh === payload.quote.zh));
     assert.ok(payload.message.includes(payload.quote.en));
     assert.ok(payload.message.includes(payload.quote.zh));
